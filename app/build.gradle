@@ -12,6 +12,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled = true
     }
     buildTypes {
         release {
@@ -37,28 +38,38 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
+    compile group: 'com.github.chrisbanes.photoview', name: 'library', version: '1.2.4'
+
     compile 'org.igniterealtime.smack:smack-android:4.2.0'
     compile 'org.igniterealtime.smack:smack-android-extensions:4.2.0'
     compile 'org.igniterealtime.smack:smack-tcp:4.2.0'
-    compile "org.igniterealtime.smack:smack-experimental:4.2.0"
-
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
-    compile group: 'com.github.chrisbanes.photoview', name: 'library', version: '1.2.4'
+    compile 'org.igniterealtime.smack:smack-experimental:4.2.0'
 
     compile 'com.r0adkll:slidableactivity:2.0.5'
     compile 'de.hdodenhof:circleimageview:1.1.0'
     compile 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
     compile 'com.github.javiersantos:BottomDialogs:1.2.1'
-
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
     compile 'com.squareup.retrofit2:retrofit:2.3.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.google.dagger:dagger:2.9'
+    compile 'com.github.pinball83:masked-edittext:1.0.3'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.google.android.gms:play-services-auth:11.0.1'
+    compile 'com.google.android.gms:play-services-gcm:11.0.1'
+    compile 'com.google.firebase:firebase-core:11.0.1'
+    compile 'com.google.firebase:firebase-auth:11.0.1'
+    compile 'com.google.firebase:firebase-messaging:11.0.1'
+    compile 'com.firebase:firebase-jobdispatcher:0.6.0'
+    compile 'com.google.firebase:firebase-database:11.0.1'
+    compile 'com.android.support:support-vector-drawable:25.3.1'
 
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.9'
     provided 'javax.annotation:jsr250-api:1.0'
 }
+
+apply plugin: 'com.google.gms.google-services'

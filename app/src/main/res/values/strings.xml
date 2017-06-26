@@ -1,15 +1,17 @@
 <resources>
     <string name="app_name">HVKZ</string>
 
-    <!-- Strings related to login -->
-    <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password (optional)</string>
-    <string name="action_sign_in">Sign in or register</string>
-    <string name="action_sign_in_short">Sign in</string>
-    <string name="error_invalid_email">This email address is invalid</string>
-    <string name="error_invalid_password">This password is too short</string>
-    <string name="error_incorrect_password">This password is incorrect</string>
-    <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email completions."</string>
+    <!-- Strings related to verifyPhoneNumber -->
+    <string name="prompt_phone_number">Введите свой номер телефона</string>
+    <string name="prompt_password">Пароль</string>
+    <string name="action_code_sent">Отправить код</string>
+    <string name="repeat_through">Повторить через</string>
+    <string name="error_invalid_phone_number">Введите Ваш номер телефона</string>
+    <string name="error_invalid_password">Пароль должен быть не меньше 5 символов</string>
+    <string name="login_title">Худеем Вместе!</string>
+    <string name="sms_description">На Ваш номер будет отправлено СМС сообщение с кодом подтверждения. Приложение увидит сообщение и авторизует Вас.</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
 </resources>
