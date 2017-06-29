@@ -40,12 +40,13 @@ dependencies {
 
     compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
     compile group: 'com.github.chrisbanes.photoview', name: 'library', version: '1.2.4'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
 
     compile 'org.igniterealtime.smack:smack-android:4.2.0'
     compile 'org.igniterealtime.smack:smack-android-extensions:4.2.0'
     compile 'org.igniterealtime.smack:smack-tcp:4.2.0'
     compile 'org.igniterealtime.smack:smack-experimental:4.2.0'
-
+    compile 'com.github.karanchuri:PermissionManager:0.1.0'
     compile 'com.r0adkll:slidableactivity:2.0.5'
     compile 'de.hdodenhof:circleimageview:1.1.0'
     compile 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
@@ -66,7 +67,7 @@ dependencies {
     compile 'com.firebase:firebase-jobdispatcher:0.6.0'
     compile 'com.google.firebase:firebase-database:11.0.1'
     compile 'com.android.support:support-vector-drawable:25.3.1'
-
+    compile 'com.android.support:support-v4:25.3.1'
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.9'
     provided 'javax.annotation:jsr250-api:1.0'

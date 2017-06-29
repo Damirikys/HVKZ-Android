@@ -8,7 +8,7 @@
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin"
-                android:background="@color/colorPrimaryDark"
+                android:background="@color/colorPrimary"
                 tools:context="org.hvkz.hvkz.auth.AuthActivity">
 
 
@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/colorWhite"
             android:textSize="28sp"
             android:fontFamily="casual"
             android:text="@string/login_title"/>
@@ -41,18 +41,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/prompt_phone_number"
+                android:textCursorDrawable="@null"
                 android:textSize="24sp"
+                android:textColor="@color/colorWhite"
                 android:paddingTop="16dp"
                 android:paddingBottom="16dp"
-                android:textColor="@color/colorAccent"
-                android:textColorHighlight="@color/colorAccent"
-                android:textColorHint="@color/colorAccent"
-                android:textColorLink="@color/colorAccent"
                 android:textAlignment="center"
-                android:inputType="phone"
-                app:mask="+7 (xxx) xxx xx xx"
-                app:notMaskedSymbol="x"
-                app:maskIconColor="@color/colorPrimary"
+                android:inputType="number"
+                app:mask="+7-(***)-***-**-**"
+                app:notMaskedSymbol="*"
+                app:maskIconColor="@color/colorWhite"
                 android:maxLines="1"/>
 
         </android.support.design.widget.TextInputLayout>
@@ -68,8 +66,6 @@
             android:text="@string/action_code_sent"
             android:enabled="false"
             android:textStyle="bold"/>
-
-
 
     </LinearLayout>
 

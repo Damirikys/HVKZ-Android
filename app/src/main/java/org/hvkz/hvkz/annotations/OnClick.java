@@ -1,4 +1,4 @@
-package org.hvkz.hvkz.app.annotations;
+package org.hvkz.hvkz.annotations;
 
 import android.support.annotation.IdRes;
 

@@ -8,24 +8,26 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 
+import org.hvkz.hvkz.app.IPresenter;
+
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AuthPresenter
+public class AuthPresenter implements IPresenter
 {
     private static final String TAG = "AuthPresenter";
     private static final String SMS_EXTRA_KEY = "pdus";
     private static final int TIME_WAIT_LIMIT = 60;
 
-    private IAuthView view;
+    private AuthCallback view;
 
     private FirebaseAuth firebaseAuth;
     private PhoneAuthProvider phoneAuthProvider;
 
     private OnVerificationState verificationState;
 
-    public AuthPresenter(IAuthView view) {
+    public AuthPresenter(AuthCallback view) {
         this.view = view;
         this.firebaseAuth = FirebaseAuth.getInstance();
         this.phoneAuthProvider = PhoneAuthProvider.getInstance();
@@ -74,5 +76,10 @@ public class AuthPresenter
                 view.onAuthenticateFailed("Не удалось авторизоваться. Проверьте интернет-соединение и повторите попытку.");
             }
         });
+    }
+
+    @Override
+    public void onDestroy() {
+        view = null;
     }
 }

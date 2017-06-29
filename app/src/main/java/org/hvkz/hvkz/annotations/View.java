@@ -1,5 +1,4 @@
-package org.hvkz.hvkz.app.annotations;
-
+package org.hvkz.hvkz.annotations;
 
 import android.support.annotation.IdRes;
 
@@ -11,8 +10,8 @@ import java.lang.annotation.Target;
 
 @Documented
 @Retention(value= RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface OnLongClick
+@Target(ElementType.FIELD)
+public @interface View
 {
     @IdRes int value() default 0;
 }

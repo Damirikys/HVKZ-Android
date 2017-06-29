@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.hvkz.hvkz.uapi.models.UAPIClient;
+
 import dagger.Module;
 import dagger.Provides;
 
@@ -19,5 +21,10 @@ public class DependencyProvider
     @Provides
     public DatabaseReference provideDatabase() {
         return FirebaseDatabase.getInstance().getReference();
+    }
+
+    @Provides
+    public UAPIClient provideUAPIClient() {
+        return UAPIClient.getInstance();
     }
 }

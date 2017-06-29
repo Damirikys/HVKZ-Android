@@ -10,15 +10,16 @@ import android.widget.Toast;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import org.hvkz.hvkz.annotations.Layout;
+import org.hvkz.hvkz.annotations.View;
 import org.hvkz.hvkz.app.AppActivity;
 import org.hvkz.hvkz.app.HVKZApp;
-import org.hvkz.hvkz.app.annotations.Layout;
-import org.hvkz.hvkz.app.annotations.View;
+import org.hvkz.hvkz.sync.SyncPresenter;
 
 import javax.inject.Inject;
 
 @Layout(R.layout.activity_main)
-public class MainActivity extends AppActivity<Integer>
+public class MainActivity extends AppActivity<SyncPresenter>
 {
     @Inject
     FirebaseUser currentUser;
@@ -31,7 +32,6 @@ public class MainActivity extends AppActivity<Integer>
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener()
     {
-
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
@@ -55,12 +55,12 @@ public class MainActivity extends AppActivity<Integer>
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        HVKZApp.component(this).inject(this);
+        HVKZApp.component().inject(this);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
 
     @Override
-    protected Integer createPresenter() {
-        return null;
+    protected SyncPresenter createPresenter() {
+        return new SyncPresenter(this);
     }
 }
