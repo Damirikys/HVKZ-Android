@@ -3,7 +3,12 @@ package org.hvkz.hvkz.uapi.models.entities;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Patterns;
 
+import com.google.gson.annotations.SerializedName;
+
+import org.hvkz.hvkz.db.firebase.TokenManager;
+import org.hvkz.hvkz.uapi.oauth.OAuth;
 import org.hvkz.hvkz.utils.serialize.JSONFactory;
 
 public class UserProfile implements User
@@ -13,16 +18,34 @@ public class UserProfile implements User
 
     private String user;
     private String email;
-    private String full_name;
+
+    @SerializedName("full_name")
+    private String name;
+
     private String signature;
     private String reg_date_timestamp;
-    private String avatar;
+
+    @SerializedName("avatar")
+    private String photo;
+
     private String city;
     private String birthday;
     private Gender gender;
     private String country;
     private String email_verified;
+    private String yahoo;
+    private String state;
     private long phone;
+
+    private TokenManager devices;
+
+    public UserProfile() {}
+
+    public UserProfile(String name, String photoUrl, TokenManager tokenManager) {
+        this.name = name;
+        this.photo = photoUrl;
+        this.devices = tokenManager;
+    }
 
     @Override
     public String getUid() {
@@ -53,13 +76,17 @@ public class UserProfile implements User
     @Nullable
     @Override
     public String getDisplayName() {
-        return full_name;
+        return name;
     }
 
     @Nullable
     @Override
     public Uri getPhotoUrl() {
-        return Uri.parse(avatar);
+        if (Patterns.WEB_URL.matcher(photo).matches()) {
+            return Uri.parse(photo);
+        } else {
+            return Uri.parse(OAuth.BASE_URL + photo);
+        }
     }
 
     @NonNull
@@ -78,8 +105,13 @@ public class UserProfile implements User
         return group.name;
     }
 
-    public String getSignature() {
-        return signature;
+    public TokenManager getDevices() {
+        return devices;
+    }
+
+    @Override
+    public UserData getUserData() {
+        return new UserData(signature, yahoo, state);
     }
 
     public String getRegDate() {

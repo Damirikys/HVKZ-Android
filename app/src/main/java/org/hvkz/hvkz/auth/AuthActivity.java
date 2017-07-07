@@ -1,6 +1,5 @@
 package org.hvkz.hvkz.auth;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,19 +10,21 @@ import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.github.pinball83.maskededittext.MaskedEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import org.hvkz.hvkz.MainActivity;
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.Layout;
 import org.hvkz.hvkz.annotations.OnClick;
 import org.hvkz.hvkz.annotations.View;
 import org.hvkz.hvkz.app.AppActivity;
+import org.hvkz.hvkz.app.HVKZApp;
 import org.hvkz.hvkz.sync.SyncActivity;
+import org.hvkz.hvkz.utils.network.NetworkStatus;
 import org.hvkz.hvkz.utils.validators.NumberValidator;
 
 @Layout(R.layout.activity_login)
@@ -34,57 +35,67 @@ public class AuthActivity extends AppActivity<AuthPresenter> implements AuthCall
 
     @View(R.id.phone_edit_text)
     MaskedEditText phoneEditText;
+
     @View(R.id.sign_in_button)
     Button signInButton;
+
+    @View(R.id.splash_screen)
+    FrameLayout splashScreen;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        HVKZApp.component().inject(this);
+    }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             onAuthenticateSuccess();
+        } else {
+            registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    Log.d(TAG, "SMS WAS RECEIVED");
+                    getPresenter().handleSMS(intent.getExtras());
+                }
+            }, new IntentFilter(ACTION_SMS_RECEIVE));
+
+            phoneEditText.setOnKeyListener((v, keyCode, event) -> {
+                signInButton.setEnabled(NumberValidator.numberIsCorrect(phoneEditText.getUnmaskedText()));
+                return false;
+            });
+
+            phoneEditText.setHintTextColor(Color.WHITE);
         }
-
-        phoneEditText.setHintTextColor(Color.WHITE);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "SMS WAS RECEIVED");
-                getPresenter().handleSMS(intent.getExtras());
-            }
-        }, new IntentFilter(ACTION_SMS_RECEIVE));
-
-        phoneEditText.setOnKeyListener((v, keyCode, event) -> {
-            signInButton.setEnabled(NumberValidator.numberIsCorrect(phoneEditText.getUnmaskedText()));
-            return false;
-        });
     }
 
     @OnClick(R.id.sign_in_button)
     public void onSignButtonClick() {
         Log.d(TAG, "onSignButtonClick");
-        signInButton.setEnabled(false);
+        if (NetworkStatus.hasConnection(this)) {
+            signInButton.setEnabled(false);
 
-        getPresenter().verifyPhoneNumber(phoneEditText.getUnmaskedText());
+            getPresenter().verifyPhoneNumber(phoneEditText.getUnmaskedText());
 
-        new CountDownTimer(60000, 1000)
-        {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                String value = getString(R.string.repeat_through) + " " + String.valueOf(millisUntilFinished / 1000);
-                signInButton.setText(value);
-            }
+            new CountDownTimer(60000, 1000)
+            {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    String value = getString(R.string.repeat_through) + " " + String.valueOf(millisUntilFinished / 1000);
+                    signInButton.setText(value);
+                }
 
-            @Override
-            public void onFinish() {
-                signInButton.setText(getString(R.string.action_code_sent));
-                signInButton.setEnabled(true);
-            }
-        }.start();
+                @Override
+                public void onFinish() {
+                    signInButton.setText(getString(R.string.action_code_sent));
+                    signInButton.setEnabled(true);
+                }
+            }.start();
+        } else {
+            Toast.makeText(this, "Нет интернет соединения", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -102,21 +113,15 @@ public class AuthActivity extends AppActivity<AuthPresenter> implements AuthCall
             if (user.getEmail() == null || user.getEmail().isEmpty()) {
                 startActivity(new Intent(this, SyncActivity.class));
             } else {
-                startActivity(new Intent(this, MainActivity.class));
+                splashScreen.setVisibility(android.view.View.VISIBLE);
+                getPresenter().syncAndContinue(user.getEmail());
             }
-
-            finish();
         }
     }
 
     @Override
     protected AuthPresenter createPresenter() {
         return new AuthPresenter(this);
-    }
-
-    @Override
-    public Activity getActivity() {
-        return this;
     }
 }
 

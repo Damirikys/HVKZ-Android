@@ -11,6 +11,7 @@
     <string name="error_invalid_phone_number">Введите Ваш номер телефона</string>
     <string name="error_invalid_password">Пароль должен быть не меньше 5 символов</string>
     <string name="login_title">Худеем Вместе!</string>
+    <string name="welcome">Добро пожаловать</string>
     <string name="sms_description">На Ваш номер будет отправлено СМС сообщение с кодом подтверждения. Приложение увидит сообщение и авторизует Вас.</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_home">Home</string>

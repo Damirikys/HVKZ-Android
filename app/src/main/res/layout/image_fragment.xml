@@ -1,0 +1,21 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <uk.co.senab.photoview.PhotoView android:id="@+id/fragmentimage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        xmlns:android="http://schemas.android.com/apk/res/android" />
+
+    <TextView
+        android:id="@+id/description"
+        android:textColor="@color/cardview_light_background"
+        android:textSize="8pt"
+        android:padding="30dp"
+        android:background="@drawable/photo_desc_background"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</RelativeLayout>

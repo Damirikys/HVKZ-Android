@@ -1,6 +1,6 @@
 package org.hvkz.hvkz.app;
 
-public interface IPresenter
+public interface Destroyable
 {
     void onDestroy();
 }

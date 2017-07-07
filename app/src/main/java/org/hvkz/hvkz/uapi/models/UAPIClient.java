@@ -3,13 +3,17 @@ package org.hvkz.hvkz.uapi.models;
 import android.support.annotation.NonNull;
 
 import org.hvkz.hvkz.uapi.UAPIBackend;
+import org.hvkz.hvkz.uapi.models.responses.UAPIPhotoResponse;
 import org.hvkz.hvkz.uapi.models.responses.UAPIUserResponse;
 import org.hvkz.hvkz.uapi.oauth.OAuthSignature;
 import org.hvkz.hvkz.uapi.utils.NonceGenerator;
 
+import java.io.File;
 import java.net.URLEncoder;
 import java.util.HashMap;
 
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -60,6 +64,39 @@ public class UAPIClient
                     nonce,
                     timestamp,
                     userEmail
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Call<UAPIPhotoResponse> uploadPhoto(@NonNull File file) {
+        try {
+            long timestamp = getTimestamp();
+            String nonce = NonceGenerator.nonce();
+            String targetUrl = BASE_URL + UAPIBackend.UPLOAD_PHOTO_BASE_URL;
+            String signature = OAuthSignature.create(
+                    targetUrl,
+                    OAuthSignature.POST,
+                    nonce,
+                    timestamp,
+                    new HashMap<String, String>() {{
+                        put("category", "1");
+                    }}
+            );
+
+            RequestBody body = RequestBody.create(MediaType.parse("image/*"), file);
+
+            return uapiBackend.uploadPhoto(
+                    signature,
+                    OAUTH_SIGNATURE_METHOD,
+                    OAUTH_VERSION,
+                    OAUTH_CONSUMER_KEY,
+                    OAUTH_TOKEN,
+                    nonce,
+                    timestamp,
+                    1,
+                    body
             );
         } catch (Exception e) {
             throw new RuntimeException(e);

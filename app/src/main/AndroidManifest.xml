@@ -34,9 +34,10 @@
             android:label="@string/title_activity_sync">
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".modules.home.MainActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_main">
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <service android:name=".services.MyFirebaseMessagingService">
@@ -56,6 +57,13 @@
                 <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
             </intent-filter>
         </service>
+        <service
+            android:name=".xmpp.ConnectionService"
+            android:exported="false">
+        </service>
+
+        <activity android:name=".modules.Main2Activity">
+        </activity>
     </application>
 
 </manifest>

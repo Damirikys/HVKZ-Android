@@ -1,6 +1,8 @@
 package org.hvkz.hvkz.auth;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
@@ -8,13 +10,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 
-import org.hvkz.hvkz.app.IPresenter;
+import org.hvkz.hvkz.app.Destroyable;
+import org.hvkz.hvkz.modules.home.MainActivity;
+import org.hvkz.hvkz.sync.SyncCallback;
+import org.hvkz.hvkz.sync.SyncInteractor;
+import org.hvkz.hvkz.uapi.models.entities.User;
 
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AuthPresenter implements IPresenter
+public class AuthPresenter implements Destroyable, SyncCallback
 {
     private static final String TAG = "AuthPresenter";
     private static final String SMS_EXTRA_KEY = "pdus";
@@ -69,6 +75,7 @@ public class AuthPresenter implements IPresenter
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
+        Log.d(TAG, "signInWithPhoneAuthCredential");
         firebaseAuth.signInWithCredential(credential).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 view.onAuthenticateSuccess();
@@ -76,6 +83,40 @@ public class AuthPresenter implements IPresenter
                 view.onAuthenticateFailed("Не удалось авторизоваться. Проверьте интернет-соединение и повторите попытку.");
             }
         });
+    }
+
+    public void syncAndContinue(String address) {
+        SyncInteractor.with(address)
+                .call(this)
+                .start();
+    }
+
+    @Override
+    public void onSuccessSync(@NonNull User info) {
+        view.getActivity().startActivity(new Intent(view.getActivity(), MainActivity.class));
+        view.getActivity().finish();
+    }
+
+    @Override
+    public void numberMismatch() {
+        resetAuth();
+    }
+
+    @Override
+    public void accountNotFound() {
+        resetAuth();
+    }
+
+    @Override
+    public void onFailed(Throwable throwable) {
+        throwable.printStackTrace();
+        resetAuth();
+    }
+
+    private void resetAuth() {
+        FirebaseAuth.getInstance().signOut();
+        view.getActivity().startActivity(new Intent(view.getActivity(), AuthActivity.class));
+        view.getActivity().finish();
     }
 
     @Override

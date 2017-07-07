@@ -1,7 +1,9 @@
 package org.hvkz.hvkz.app;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -13,17 +15,12 @@ import android.support.v7.app.AppCompatActivity;
 import com.karan.churi.PermissionManager.PermissionManager;
 
 import org.hvkz.hvkz.annotations.Layout;
-import org.hvkz.hvkz.annotations.OnClick;
-import org.hvkz.hvkz.annotations.OnLongClick;
-import org.hvkz.hvkz.annotations.View;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 @Layout
-public abstract class AppActivity<T extends IPresenter> extends AppCompatActivity
+public abstract class AppActivity<T extends Destroyable> extends AppCompatActivity implements BaseActivity
 {
     private List<BroadcastReceiver> receivers = new ArrayList<>();
     private PermissionManager permissionManager;
@@ -31,43 +28,11 @@ public abstract class AppActivity<T extends IPresenter> extends AppCompatActivit
     private T presenter;
 
     @Override
-    protected final void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Class<? extends AppActivity> clazz = getClass();
         setContentView(clazz.getAnnotation(Layout.class).value());
-
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(View.class)) {
-                field.setAccessible(true);
-                try {
-                    field.set(this, findViewById(field.getAnnotation(View.class).value()));
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        for (Method method : clazz.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(OnClick.class)) {
-                findViewById(method.getAnnotation(OnClick.class).value()).setOnClickListener(v -> {
-                    try {
-                        method.invoke(clazz.cast(this));
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            } else if (method.isAnnotationPresent(OnLongClick.class)) {
-                findViewById(method.getAnnotation(OnLongClick.class).value()).setOnLongClickListener(v -> {
-                    try {
-                        method.invoke(clazz.cast(this));
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    return true;
-                });
-            }
-        }
+        ActivityHolder.hold(this, this);
 
         progressDialog = new ProgressDialog(this);
         permissionManager = PermissionController.checkAndRequestPermission(this);
@@ -90,6 +55,17 @@ public abstract class AppActivity<T extends IPresenter> extends AppCompatActivit
         return presenter;
     }
 
+    @Override
+    public final Context getContext() {
+        return getBaseContext();
+    }
+
+    @Override
+    public final Activity getActivity() {
+        return this;
+    }
+
+    @Override
     public void showProgress(String message) {
         runOnUiThread(() -> {
             progressDialog.setMessage(message);
@@ -97,10 +73,12 @@ public abstract class AppActivity<T extends IPresenter> extends AppCompatActivit
         });
     }
 
+    @Override
     public void hideProgress() {
         runOnUiThread(() -> progressDialog.dismiss());
     }
 
+    @Override
     public void dialogMessage(String title, String message) {
         runOnUiThread(() -> {
             if (progressDialog.isShowing()) hideProgress();
