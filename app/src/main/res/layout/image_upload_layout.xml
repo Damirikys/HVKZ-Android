@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_weight="2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/selected_image_view"
+                android:background="@color/colorLight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"/>
+
+            <io.netopen.hotbitmapgg.library.view.RingProgressBar
+                android:id="@+id/selected_image_progress"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_centerInParent="true"
+                android:background="@null"
+                app:ringColor="@color/colorPrimary"
+                app:ringProgressColor="@color/colorPrimaryDark"
+                app:ringWidth="3dp"
+                app:style="FILL"
+                app:textColor="@color/colorPrimary"/>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="@dimen/sixteen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textColor="@color/colorPrimaryDarkest"
+                android:text="Загрузка изображения"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/six"
+                android:text="Изображение выбрано. Вы можете добавить описание к фотографии."/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:padding="@dimen/sixteen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/img_desc_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Описание фотографии"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:inputType="textCapSentences|textAutoCorrect|textMultiLine"
+            android:maxLines="5"/>
+
+    </android.support.design.widget.TextInputLayout>
+
+</LinearLayout>

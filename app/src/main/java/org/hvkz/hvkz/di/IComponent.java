@@ -1,9 +1,10 @@
 package org.hvkz.hvkz.di;
 
 import org.hvkz.hvkz.auth.AuthActivity;
-import org.hvkz.hvkz.db.firebase.PhotosDb;
-import org.hvkz.hvkz.modules.home.MainActivity;
-import org.hvkz.hvkz.modules.home.MainViewHandler;
+import org.hvkz.hvkz.database.GalleryStorage;
+import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
+import org.hvkz.hvkz.modules.MainActivity;
+import org.hvkz.hvkz.modules.profile.ProfileViewHandler;
 import org.hvkz.hvkz.sync.SyncInteractor;
 import org.hvkz.hvkz.sync.SyncPresenter;
 import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
@@ -19,7 +20,9 @@ public interface IComponent
 {
     void inject(AuthActivity activity);
 
-    void inject(MainViewHandler viewHandler);
+    void inject(GalleryStorage storage);
+
+    void inject(ProfileViewHandler viewHandler);
 
     void inject(PhotosDb photosDb);
 

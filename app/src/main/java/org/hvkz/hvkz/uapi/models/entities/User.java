@@ -5,8 +5,6 @@ import android.support.annotation.NonNull;
 
 import com.google.firebase.auth.UserInfo;
 
-import org.hvkz.hvkz.db.firebase.TokenManager;
-
 public interface User extends UserInfo
 {
     int getUserId();

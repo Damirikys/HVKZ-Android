@@ -8,18 +8,18 @@ import android.widget.EditText;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.adapters.TextWatcherAdapter;
+import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.annotations.Layout;
 import org.hvkz.hvkz.annotations.OnClick;
-import org.hvkz.hvkz.annotations.View;
-import org.hvkz.hvkz.app.AppActivity;
+import org.hvkz.hvkz.models.AppActivity;
 import org.hvkz.hvkz.utils.validators.EmailValidator;
 
 @Layout(R.layout.activity_settings)
 public class SyncActivity extends AppActivity<SyncPresenter>
 {
-    @View(R.id.email_edit_text)
+    @BindView(R.id.email_edit_text)
     EditText emailEditText;
-    @View(R.id.email_confirm_button)
+    @BindView(R.id.email_confirm_button)
     Button emailConfirmButton;
 
     @Override

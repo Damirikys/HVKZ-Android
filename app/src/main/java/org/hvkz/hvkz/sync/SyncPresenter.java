@@ -11,10 +11,10 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseUser;
 
-import org.hvkz.hvkz.app.AppActivity;
-import org.hvkz.hvkz.app.Destroyable;
-import org.hvkz.hvkz.app.HVKZApp;
-import org.hvkz.hvkz.modules.home.MainActivity;
+import org.hvkz.hvkz.HVKZApp;
+import org.hvkz.hvkz.interfaces.Destroyable;
+import org.hvkz.hvkz.models.AppActivity;
+import org.hvkz.hvkz.modules.MainActivity;
 import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
 

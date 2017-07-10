@@ -1,6 +1,6 @@
 package org.hvkz.hvkz.xmpp;
 
-import org.hvkz.hvkz.app.HVKZApp;
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.uapi.oauth.OAuthSignature;
 

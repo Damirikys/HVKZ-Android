@@ -10,8 +10,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 
-import org.hvkz.hvkz.app.Destroyable;
-import org.hvkz.hvkz.modules.home.MainActivity;
+import org.hvkz.hvkz.interfaces.Destroyable;
+import org.hvkz.hvkz.modules.MainActivity;
 import org.hvkz.hvkz.sync.SyncCallback;
 import org.hvkz.hvkz.sync.SyncInteractor;
 import org.hvkz.hvkz.uapi.models.entities.User;

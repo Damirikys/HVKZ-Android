@@ -12,7 +12,7 @@
         android:id="@+id/photo_item"
         android:orientation="vertical"
         android:layout_gravity="center"
-        android:scaleType="centerInside"
+        android:scaleType="centerCrop"
         android:layout_width="match_parent"
         android:layout_height="120dp"/>
 

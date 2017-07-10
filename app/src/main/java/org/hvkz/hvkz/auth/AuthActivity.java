@@ -17,12 +17,12 @@ import com.github.pinball83.maskededittext.MaskedEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.R;
+import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.annotations.Layout;
 import org.hvkz.hvkz.annotations.OnClick;
-import org.hvkz.hvkz.annotations.View;
-import org.hvkz.hvkz.app.AppActivity;
-import org.hvkz.hvkz.app.HVKZApp;
+import org.hvkz.hvkz.models.AppActivity;
 import org.hvkz.hvkz.sync.SyncActivity;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
 import org.hvkz.hvkz.utils.validators.NumberValidator;
@@ -33,13 +33,13 @@ public class AuthActivity extends AppActivity<AuthPresenter> implements AuthCall
     public static final String TAG = "AuthActivity";
     public static final String ACTION_SMS_RECEIVE = "android.provider.Telephony.SMS_RECEIVED";
 
-    @View(R.id.phone_edit_text)
+    @BindView(R.id.phone_edit_text)
     MaskedEditText phoneEditText;
 
-    @View(R.id.sign_in_button)
+    @BindView(R.id.sign_in_button)
     Button signInButton;
 
-    @View(R.id.splash_screen)
+    @BindView(R.id.splash_screen)
     FrameLayout splashScreen;
 
     @Override

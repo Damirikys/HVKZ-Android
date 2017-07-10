@@ -1,6 +1,6 @@
 package org.hvkz.hvkz.uapi.models.entities;
 
-import org.hvkz.hvkz.db.firebase.UsersDb;
+import org.hvkz.hvkz.firebase.db.users.UsersDb;
 
 public final class UAPIUser
 {

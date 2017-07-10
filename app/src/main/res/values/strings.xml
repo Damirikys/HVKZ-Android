@@ -14,9 +14,9 @@
     <string name="welcome">Добро пожаловать</string>
     <string name="sms_description">На Ваш номер будет отправлено СМС сообщение с кодом подтверждения. Приложение увидит сообщение и авторизует Вас.</string>
     <string name="title_activity_main">MainActivity</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_home">Профиль</string>
+    <string name="title_message">Сообщения</string>
+    <string name="title_menu">Меню</string>
     <string name="title_activity_sync">Синхронизация</string>
 
     <!-- Strings related to Settings -->

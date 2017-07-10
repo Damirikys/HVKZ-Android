@@ -7,7 +7,6 @@ import android.util.Patterns;
 
 import com.google.gson.annotations.SerializedName;
 
-import org.hvkz.hvkz.db.firebase.TokenManager;
 import org.hvkz.hvkz.uapi.oauth.OAuth;
 import org.hvkz.hvkz.utils.serialize.JSONFactory;
 

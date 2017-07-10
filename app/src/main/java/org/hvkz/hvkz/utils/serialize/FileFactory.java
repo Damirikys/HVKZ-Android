@@ -4,7 +4,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 
-import org.hvkz.hvkz.app.HVKZApp;
+import org.hvkz.hvkz.HVKZApp;
 
 import java.io.File;
 

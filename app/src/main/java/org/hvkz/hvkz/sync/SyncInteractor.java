@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.google.firebase.auth.FirebaseUser;
 
-import org.hvkz.hvkz.app.HVKZApp;
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.uapi.models.UAPIClient;
 import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
 import org.hvkz.hvkz.uapi.models.entities.User;
