@@ -5,12 +5,11 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.hvkz.hvkz.database.GalleryStorage;
-import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
 import org.hvkz.hvkz.firebase.entities.Photo;
 import org.hvkz.hvkz.firebase.storage.PhotoUploader;
+import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.ViewHandler;
 import org.hvkz.hvkz.models.BasePresenter;
-import org.hvkz.hvkz.modules.profile.gallery.GalleryViewAdapter;
 import org.hvkz.hvkz.utils.network.FBStorageExecutor;
 
 import static android.app.Activity.RESULT_OK;
@@ -20,28 +19,11 @@ public class ProfilePresenter extends BasePresenter implements FBStorageExecutor
 {
     private static final String TAG = "ProfilePresenter";
 
-    private final int PHOTO_LIMIT = 30;
-    private int PHOTO_OFFSET = PHOTO_LIMIT * (-1);
-
-    private ProfileViewHandler viewHandler;
     private GalleryStorage galleryStorage;
 
-    public ProfilePresenter(ProfileFragment fragment) {
-        super(fragment);
-        this.galleryStorage = GalleryStorage.getInstance();
-        if (galleryStorage.isEmpty()) refreshGallery();
-        else loadMore();
-    }
-
-    public void refreshGallery() {
-        Log.d(TAG, "Load from Firebase Storage.");
-        PhotosDb.getAll(photos -> {
-            galleryStorage.clear();
-            viewHandler.getGalleryViewAdapter().clear();
-            galleryStorage.addAll(photos);
-            PHOTO_OFFSET = PHOTO_LIMIT * (-1);
-            loadMore();
-        });
+    public ProfilePresenter(BaseWindow activity) {
+        super(activity);
+        galleryStorage = GalleryStorage.getInstance();
     }
 
     public void uploadImage(Uri image) {
@@ -50,21 +32,14 @@ public class ProfilePresenter extends BasePresenter implements FBStorageExecutor
                 .execute(image);
     }
 
-    public void loadMore() {
-        Log.d(TAG, "Load more from DB");
-        GalleryViewAdapter adapter = viewHandler.getGalleryViewAdapter();
-        int oldCount = adapter.getItemCount();
-        adapter.addPhotos(galleryStorage.getPhotos(PHOTO_LIMIT, PHOTO_OFFSET = PHOTO_OFFSET + PHOTO_LIMIT));
-
-        if (oldCount == 0) adapter.notifyDataSetChanged();
-        else adapter.notifyItemRangeInserted(oldCount, PHOTO_LIMIT);
-    }
-
     @Override
     public void onUploaded(Photo uploaded) {
         Log.d(TAG, "SUCCESS UPLOADED");
-        viewHandler.getGalleryViewAdapter().addPhoto(uploaded);
-        viewHandler.getGalleryViewAdapter().notifyItemInserted(0);
+        getViewHandler(ProfileViewHandler.class)
+                .getGalleryViewAdapter()
+                .addPhoto(uploaded)
+                .notifyItemInserted(0);
+
         galleryStorage.add(uploaded);
     }
 
@@ -84,8 +59,8 @@ public class ProfilePresenter extends BasePresenter implements FBStorageExecutor
     }
 
     @Override
-    protected ViewHandler getViewHandler() {
-        return viewHandler = new ProfileViewHandler();
+    protected ViewHandler createViewHandler(BaseWindow activity) {
+        return new ProfileViewHandler(activity);
     }
 
     @Override

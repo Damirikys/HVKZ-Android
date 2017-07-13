@@ -11,6 +11,7 @@ public class XMPPConfiguration
 
     public static final String RESOURCE = "Android";
     public static final String DOMAIN = "s0565719c.fastvps-server.com";
+    public static final String DOMAIN_CONFERENCE = "conference.s0565719c.fastvps-server.com";
     public static final String HOST = "api.hvkz.org";
     public static final int PORT = 5222;
 

@@ -1,6 +1,5 @@
 package org.hvkz.hvkz.firebase.db.photos;
 
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -33,7 +32,7 @@ public class PhotosDb
         database = FirebaseDatabase.getInstance().getReference(KEY);
     }
 
-    public static void uploadPhoto(Photo photo, Callback<Boolean> callback) {
+    public static void upload(Photo photo, Callback<Boolean> callback) {
         PHOTOS_DB.database
                 .child(String.valueOf(PHOTOS_DB.user.getUserId()))
                 .child(String.valueOf(photo.getDate()))
@@ -41,8 +40,11 @@ public class PhotosDb
                 .addOnCompleteListener(task -> callback.call(task.isSuccessful()));
     }
 
-    public static void deletePhoto() {
-
+    public static void remove(Photo photo, Callback<Boolean> callback) {
+        PHOTOS_DB.database
+                .child(String.valueOf(PHOTOS_DB.user.getUserId()))
+                .child(String.valueOf(photo.getDate()))
+                .removeValue().addOnCompleteListener(task -> callback.call(task.isSuccessful()));
     }
 
     public static void getAll(Callback<List<Photo>> callback) {
@@ -63,38 +65,6 @@ public class PhotosDb
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
                         databaseError.toException().printStackTrace();
-                    }
-                });
-    }
-
-    public static void lol() {
-        PHOTOS_DB.database
-                .child(String.valueOf(PHOTOS_DB.user.getUserId()))
-                .addChildEventListener(new ChildEventListener()
-                {
-                    @Override
-                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                        System.out.println("CHILD ADDDEEEED");
-                    }
-
-                    @Override
-                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                    }
-
-                    @Override
-                    public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                    }
-
-                    @Override
-                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
                     }
                 });
     }

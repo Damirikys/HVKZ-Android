@@ -8,13 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.hvkz.hvkz.annotations.Layout;
-import org.hvkz.hvkz.interfaces.BaseActivity;
+import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.Destroyable;
 
 @SuppressWarnings("unchecked")
-public abstract class AppFragment<T extends Destroyable> extends Fragment implements BaseActivity
+public abstract class AppFragment<T extends Destroyable> extends Fragment implements BaseWindow
 {
-    private AppActivity<Destroyable> parent;
+    private BaseWindow parent;
     private T presenter;
 
     @Override
@@ -30,13 +30,13 @@ public abstract class AppFragment<T extends Destroyable> extends Fragment implem
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        parent = (AppActivity<Destroyable>) getActivity();
+        parent = (BaseWindow) getActivity();
         presenter = bindPresenter();
     }
 
-    public static <T extends Fragment> T newInstance(Class<T> tClass) {
+    public static <T extends Fragment> T instanceOf(Class<T> tClass) {
         try {
-            return tClass.newInstance();
+          return tClass.newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -52,8 +52,23 @@ public abstract class AppFragment<T extends Destroyable> extends Fragment implem
         return presenter;
     }
 
-    protected AppActivity<Destroyable> getParent() {
+    protected BaseWindow getParentActivity() {
         return parent;
+    }
+
+    @Override
+    public void showProgress(String message) {
+        getParentActivity().showProgress(message);
+    }
+
+    @Override
+    public void hideProgress() {
+        getParentActivity().hideProgress();
+    }
+
+    @Override
+    public void dialogMessage(String title, String message) {
+        getParentActivity().dialogMessage(title, message);
     }
 
     @Override

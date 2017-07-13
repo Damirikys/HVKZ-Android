@@ -97,7 +97,7 @@ public class PhotoUploader implements FBStorageExecutor.ExecuteCallback<Uri>
                 .setDate(System.currentTimeMillis())
                 .setDescription(description);
 
-        PhotosDb.uploadPhoto(photo, value -> {
+        PhotosDb.upload(photo, value -> {
             if (value) {
                 if (callback != null) callback.onUploaded(photo);
             } else {

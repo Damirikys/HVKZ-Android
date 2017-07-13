@@ -6,24 +6,45 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import org.hvkz.hvkz.HVKZApp;
+import org.hvkz.hvkz.firebase.db.groups.GroupsDb;
+import org.hvkz.hvkz.firebase.entities.Group;
+import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
+import org.hvkz.hvkz.xmpp.message_service.MessageReceiver;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Domainpart;
 import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.parts.Resourcepart;
 
 import java.io.IOException;
+
+import javax.inject.Inject;
 
 public class ConnectionService extends Service
 {
     public static final String TAG = "ConnectionService";
 
+    @Inject
+    User user;
+
     private XMPPCredentials credentials;
     private AbstractXMPPConnection connection;
     private AccountManager accountManager;
+
+    private MessageReceiver messageReceiver;
+    private MultiUserChatManager MUCmanager;
+    private ChatManager chatManager;
 
     private AbstractConnectionListener connectionListener = new AbstractConnectionListener()
     {
@@ -31,6 +52,7 @@ public class ConnectionService extends Service
         public void connected(XMPPConnection xmppConnection) {
             super.connected(connection);
             connection = (AbstractXMPPConnection) xmppConnection;
+            messageReceiver = MessageReceiver.instanceOf(connection);
 
             try {
                 accountManager = AccountManager.getInstance(connection);
@@ -49,9 +71,31 @@ public class ConnectionService extends Service
         }
 
         @Override
-        public void connectionClosed() {
-            super.connectionClosed();
-            Log.d(TAG, "CONNECTION CLOSED");
+        public void authenticated(XMPPConnection connection, boolean resumed) {
+            super.authenticated(connection, resumed);
+            MUCmanager = MultiUserChatManager.getInstanceFor(connection);
+            chatManager = ChatManager.getInstanceFor(connection);
+
+            GroupsDb.getMyGroups(groups -> {
+                for (Group group : groups) {
+                    try {
+                        MultiUserChat multiUserChat = MUCmanager.getMultiUserChat(JidCreate.entityBareFrom(
+                                Localpart.from(group.getGroupName()),
+                                Domainpart.from(XMPPConfiguration.DOMAIN_CONFERENCE)
+                        ));
+
+                        multiUserChat.addMessageListener(messageReceiver);
+                        MucEnterConfiguration config = multiUserChat
+                                .getEnterConfigurationBuilder(Resourcepart.from(user.getDisplayName()))
+                                .requestNoHistory()
+                                .build();
+
+                        multiUserChat.join(config);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
 
         @Override
@@ -73,6 +117,7 @@ public class ConnectionService extends Service
     @Override
     public void onCreate() {
         super.onCreate();
+        HVKZApp.component().inject(this);
         credentials = XMPPCredentials.getCredentials();
         connection = XMPPConfiguration.connectionInstance(connectionListener);
         connection.addSyncStanzaListener(packet -> System.out.println(packet.toString()), stanza -> true);

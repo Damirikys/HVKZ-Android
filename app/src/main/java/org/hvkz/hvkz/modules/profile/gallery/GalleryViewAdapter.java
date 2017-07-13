@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 
 import org.hvkz.hvkz.R;
+import org.hvkz.hvkz.database.GalleryStorage;
+import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
 import org.hvkz.hvkz.firebase.entities.Photo;
 import org.hvkz.hvkz.modules.gallery.ImagesProvider;
 
@@ -31,8 +33,9 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
         this.items.addAll(photos);
     }
 
-    public void addPhoto(Photo photo) {
+    public GalleryViewAdapter addPhoto(Photo photo) {
         items.add(0, photo);
+        return this;
     }
 
     public void removePhoto(int position)
@@ -80,7 +83,6 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
             itemView.setOnLongClickListener(this);
         }
 
-
         @Override
         public void onClick(View view) {
             ImagesProvider.provide(context, items, getAdapterPosition());
@@ -88,11 +90,25 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
 
         @Override
         public boolean onLongClick(View view) {
-            Photo item = items.get(getAdapterPosition());
+            Photo photo = items.get(getAdapterPosition());
 
             AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
             builder.setTitle("Выберите действие")
-                    .setItems(new String[]{"Удалить"}, (dialog, which) -> {
+                    .setItems(new String[]{"Удалить"}, (dialog, which) ->
+                    {
+                        PhotosDb.remove(photo, result -> {
+                            if (result) {
+                                GalleryStorage.getInstance().remove(photo);
+                                items.remove(getAdapterPosition());
+                                notifyItemRemoved(getAdapterPosition());
+                            } else {
+                                new AlertDialog.Builder(context)
+                                        .setMessage("Не удалось удалить фотографию.")
+                                        .create()
+                                        .show();
+                            }
+                        });
+
                         dialog.dismiss();
                     });
 

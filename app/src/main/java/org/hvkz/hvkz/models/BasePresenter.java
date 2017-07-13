@@ -1,32 +1,38 @@
 package org.hvkz.hvkz.models;
 
 import android.content.Context;
+import android.content.Intent;
 
-import org.hvkz.hvkz.interfaces.BaseActivity;
+import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.IBasePresenter;
 import org.hvkz.hvkz.interfaces.ViewHandler;
 
+@SuppressWarnings("unchecked")
 public abstract class BasePresenter implements IBasePresenter
 {
-    private ViewModel<BaseActivity> viewModel;
+    private ViewHandler viewHandler;
 
-    public BasePresenter(BaseActivity activity) {
-        this.viewModel = new ViewModel<>(activity);
-        getViewHandler().handle(viewModel);
+    public BasePresenter(BaseWindow activity) {
+        this.viewHandler = createViewHandler(activity);
     }
 
-    protected abstract ViewHandler getViewHandler();
+    protected abstract ViewHandler createViewHandler(BaseWindow activity);
+
+    protected <T extends ViewHandler> T getViewHandler(Class<T> tClass) {
+        return (T) viewHandler;
+    }
 
     protected Context getContext() {
-        return viewModel.context();
+        return viewHandler.context();
     }
 
-    protected ViewModel<BaseActivity> getViewModel() {
-        return viewModel;
+    @Override
+    public void onResultReceive(int requestCode, int resultCode, Intent dataIntent) {
+        //Stub
     }
 
     @Override
     public void onDestroy() {
-        viewModel.onDestroy();
+        viewHandler.onDestroy();
     }
 }

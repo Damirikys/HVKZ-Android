@@ -11,16 +11,4 @@ public class ProfileFragment extends AppFragment<ProfilePresenter>
     protected ProfilePresenter bindPresenter() {
         return new ProfilePresenter(this);
     }
-
-    @Override
-    public void showProgress(String message) {
-    }
-
-    @Override
-    public void hideProgress() {
-    }
-
-    @Override
-    public void dialogMessage(String title, String message) {
-    }
 }

@@ -4,10 +4,10 @@ import android.content.Context;
 import android.support.annotation.IdRes;
 import android.util.SparseArray;
 
-import org.hvkz.hvkz.interfaces.BaseActivity;
+import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.Destroyable;
 
-public final class ViewModel<T extends BaseActivity> implements Destroyable
+public final class ViewModel<T extends BaseWindow> implements Destroyable
 {
     private T model;
     private SparseArray<android.view.View> viewMap;

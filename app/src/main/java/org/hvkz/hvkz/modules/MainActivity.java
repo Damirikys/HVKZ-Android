@@ -36,32 +36,24 @@ public class MainActivity extends AppActivity<IBasePresenter>
     @BindView(R.id.navigation)
     private BottomNavigationView navigation;
 
-
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener = item -> {
-        switch (item.getItemId()) {
-            case R.id.navigation_home:
-                return true;
-            case R.id.navigation_dashboard:
-                return true;
-            case R.id.navigation_notifications:
-                return true;
-        }
-        return false;
-    };
+    private NavigationController navigationController;
 
     private Intent serviceIntent;
     private LocalBinder<ConnectionService> serviceBinder;
+    private boolean isBound;
 
     protected ServiceConnection mServerConn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             Log.d(TAG, "onServiceConnected");
             serviceBinder = (LocalBinder<ConnectionService>) binder;
+            isBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.d(TAG, "onServiceDisconnected");
+            isBound = false;
         }
     };
 
@@ -71,18 +63,23 @@ public class MainActivity extends AppActivity<IBasePresenter>
         HVKZApp.component().inject(this);
         startService(serviceIntent =  new Intent(this, ConnectionService.class));
 
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        navigation.setOnNavigationItemSelectedListener(navigationController =
+                new NavigationController(R.id.fragmentContainer, getSupportFragmentManager()));
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.fragmentContainer, AppFragment.newInstance(ProfileFragment.class))
-                .commit();
+        navigationController.selectFragmentClass(
+                ProfileFragment.class,
+                () -> AppFragment.instanceOf(ProfileFragment.class),
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+        );
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        bindService(serviceIntent, mServerConn, Context.BIND_AUTO_CREATE);
+        if (!isBound) {
+            bindService(serviceIntent, mServerConn, Context.BIND_AUTO_CREATE);
+        }
     }
 
     @Override
@@ -97,7 +94,15 @@ public class MainActivity extends AppActivity<IBasePresenter>
     @Override
     protected void onStop() {
         super.onStop();
-        unbindService(mServerConn);
+        if (isBound) {
+            unbindService(mServerConn);
+            isBound = false;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        navigationController.onBackPressed(value -> super.onBackPressed());
     }
 
     @Override

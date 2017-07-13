@@ -3,7 +3,7 @@ package org.hvkz.hvkz.interfaces;
 import android.app.Activity;
 import android.content.Context;
 
-public interface BaseActivity
+public interface BaseWindow
 {
     void showProgress(String message);
 

@@ -15,7 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.karan.churi.PermissionManager.PermissionManager;
 
 import org.hvkz.hvkz.annotations.Layout;
-import org.hvkz.hvkz.interfaces.BaseActivity;
+import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.Destroyable;
 import org.hvkz.hvkz.utils.controllers.PermissionController;
 
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Layout
-public abstract class AppActivity<T extends Destroyable> extends AppCompatActivity implements BaseActivity
+public abstract class AppActivity<T extends Destroyable> extends AppCompatActivity implements BaseWindow
 {
     private List<BroadcastReceiver> receivers = new ArrayList<>();
     private PermissionManager permissionManager;
