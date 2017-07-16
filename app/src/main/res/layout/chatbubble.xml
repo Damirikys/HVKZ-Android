@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:focusableInTouchMode="true"
+    android:gravity="left"
+    android:clipToPadding="false"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:id="@+id/message_tape"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:orientation="horizontal">
+
+        <RelativeLayout
+            android:gravity="start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/chatAvatar"
+                android:visibility="invisible"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:src="@mipmap/noavatar"
+                app:border_color="#00ffffff" />
+
+            <TextView
+                android:id="@+id/chatHideTime"
+                android:padding="2dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textSize="12sp"
+                android:textColor="@color/colorTitle"
+                android:text="21:35"/>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/bubbleContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start">
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/bubble_layout"
+                card_view:cardElevation="2dp"
+                card_view:cardCornerRadius="7dp"
+                android:layout_margin="2dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:id="@+id/contentbody"
+                    android:orientation="vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <android.support.v7.widget.GridLayout
+                        android:id="@+id/gridImageLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:orientation="horizontal"/>
+
+                    <TextView
+                        android:id="@+id/message_text"
+                        android:padding="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:maxEms="14"
+                        android:layout_gravity="left"
+                        android:text="Hi! new body"
+                        android:textColor="#706752" />
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</TableRow>
+

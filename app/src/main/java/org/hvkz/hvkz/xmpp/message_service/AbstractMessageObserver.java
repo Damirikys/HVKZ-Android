@@ -1,27 +1,29 @@
 package org.hvkz.hvkz.xmpp.message_service;
 
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
-import org.hvkz.hvkz.xmpp.models.Status;
+import org.jivesoftware.smackx.chatstates.ChatState;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 
 public abstract class AbstractMessageObserver implements MessageObserver
 {
-    private String chatJid;
+    private EntityBareJid chatJid;
 
-    public AbstractMessageObserver(String chatJid) {
+    public AbstractMessageObserver(EntityBareJid chatJid) {
         this.chatJid = chatJid;
     }
 
     @Override
     public void messageReceived(ChatMessage message) throws InterruptedException {
-        throw new InterruptedException("Don't have messageReceived implementation.");
+        // Stub
     }
 
     @Override
-    public void statusReceived(Status status, String userJid) throws InterruptedException {
-        throw new InterruptedException("Don't have statusReceived implementation.");
+    public void statusReceived(ChatState status, BareJid userJid) throws InterruptedException {
+        // Stub
     }
 
-    String getChatJid() {
+    EntityBareJid getChatJid() {
         return chatJid;
     }
 }

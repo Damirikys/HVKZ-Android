@@ -2,8 +2,9 @@ package org.hvkz.hvkz.xmpp.message_service.packet_listeners;
 
 import android.util.Log;
 
-import org.hvkz.hvkz.xmpp.message_service.MessageReceiver;
-import org.hvkz.hvkz.xmpp.models.Status;
+import org.jivesoftware.smackx.chatstates.ChatState;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,14 +16,14 @@ public class StatusNotificator
     private static volatile Map<String, Long> timestamps = new HashMap<>();
     private static volatile StatusWriting writingService = new StatusWriting();
 
-    public static void sendStatus(Status status, String chatJid, String userJid) {
+    public static void sendStatus(ChatState status, EntityBareJid chatJid, BareJid userJid) {
         Log.d("sendStatus " + status.name(), chatJid + " " + userJid);
         statusReceived(status, chatJid, userJid);
         notifyObservers(status, chatJid, userJid);
     }
 
-    private static void statusReceived(Status status, String chat, String user) {
-        String key = chat + "_" + user;
+    private static void statusReceived(ChatState status, EntityBareJid chat, BareJid user) {
+        String key = chat.asEntityBareJidString() + "_" + user.asUnescapedString();
 
         switch (status) {
             case inactive:
@@ -34,9 +35,9 @@ public class StatusNotificator
         }
     }
 
-    private static void notifyObservers(Status status, String chat, String user) {
-        Log.d("notifyObservers", status + " " + chat + " " + user);
-        MessageReceiver.getReceiver().provideStatus(status, chat, user);
+    private static void notifyObservers(ChatState status, EntityBareJid chat, BareJid user) {
+        Log.d("notifyObservers", status + " " + chat.asEntityBareJidString() + " " + user.asUnescapedString());
+        //MessageReceiver.getReceiver().provideStatus(status, chat, user);
     }
 
     private static class StatusWriting extends Thread
@@ -58,7 +59,7 @@ public class StatusNotificator
                             if (timestamps.get(s) < System.currentTimeMillis()) {
                                 timestamps.remove(s);
                                 String[] params = s.split("_");
-                                notifyObservers(Status.paused, params[0], params[1]);
+                                //notifyObservers(ChatState.paused, params[0], params[1]);
                             }
                         }
                     }

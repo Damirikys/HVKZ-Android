@@ -10,4 +10,8 @@ public class JSONFactory
     public static <T> String toJson(T object) {
         return GSON.toJson(object, new TypeToken<T>(){}.getType());
     }
+
+    public static <T> T fromJson(String data, Class<T> tClass) {
+        return GSON.fromJson(data, tClass);
+    }
 }

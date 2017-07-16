@@ -12,6 +12,8 @@ import org.hvkz.hvkz.utils.serialize.JSONFactory;
 
 public class UserProfile implements User
 {
+    private transient String shortName;
+
     private int uid;
     private Group group;
 
@@ -111,6 +113,20 @@ public class UserProfile implements User
     @Override
     public UserData getUserData() {
         return new UserData(signature, yahoo, state);
+    }
+
+    @Override
+    public String getShortName() {
+        if (shortName == null && getDisplayName() != null) {
+            String[] parts = getDisplayName().split("\\s+");
+            if (parts.length == 3) {
+                shortName = parts[1] + " " + parts[2];
+            } else {
+                shortName = getDisplayName();
+            }
+        }
+
+        return shortName;
     }
 
     public String getRegDate() {

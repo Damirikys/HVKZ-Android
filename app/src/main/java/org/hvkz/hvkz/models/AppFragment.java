@@ -75,5 +75,7 @@ public abstract class AppFragment<T extends Destroyable> extends Fragment implem
     public void onDestroyView() {
         super.onDestroyView();
         presenter.onDestroy();
+        parent = null;
+        presenter = null;
     }
 }

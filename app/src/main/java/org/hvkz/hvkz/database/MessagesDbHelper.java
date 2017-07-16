@@ -11,31 +11,31 @@ public class MessagesDbHelper extends SQLiteOpenHelper
     public static final String TABLE_NAME = "messages";
 
     public static final String ID = "_id";
-    public static final String STANZA_ID = "stanza";
+    public static final String UID = "uid";
     public static final String CHAT = "chat";
     public static final String JSON = "json";
-    public static final String ISREAD = "readflag";
+    public static final String STANZA_ID = "stanza";
+    public static final String READ_MARK = "read";
 
     public MessagesDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db)
-    {
+    public void onCreate(SQLiteDatabase db) {
         db.execSQL("create table " + TABLE_NAME + "("
-                + ID + " integer primary key,"
-                + STANZA_ID + " text,"
+                + ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                + UID + " integer,"
                 + CHAT + " text,"
                 + JSON + " text,"
-                + ISREAD + " integer"
+                + STANZA_ID + " text,"
+                + READ_MARK + " integer"
                 + ")"
         );
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
-    {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("drop table if exists " + TABLE_NAME);
         onCreate(db);
     }

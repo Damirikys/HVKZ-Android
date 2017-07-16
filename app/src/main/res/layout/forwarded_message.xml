@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/forwarded_message_background"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp"
+    android:paddingLeft="7dp"
+    android:paddingTop="7dp"
+    android:paddingBottom="7dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/forwardedAvatar"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginRight="7dp"
+            android:src="@mipmap/noavatar"
+            app:border_color="#00ffffff"
+            app:border_width="0dp"/>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_marginTop="-2dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/forwardedName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:text="Дамир Арманов"/>
+
+            <TextView
+                android:id="@+id/forwardedDate"
+                android:textSize="12sp"
+                android:textColor="#c4c4c4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2 декабря 22:33"/>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/forwardedBody"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:text="Тело сообщения"/>
+
+    <LinearLayout
+        android:id="@+id/forwardedAttachments"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+</LinearLayout>

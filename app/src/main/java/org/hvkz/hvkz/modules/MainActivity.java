@@ -74,6 +74,10 @@ public class MainActivity extends AppActivity<IBasePresenter>
         );
     }
 
+    public ConnectionService getConnectionService() {
+        return serviceBinder.getService();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();

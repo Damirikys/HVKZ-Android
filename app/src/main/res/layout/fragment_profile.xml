@@ -51,7 +51,7 @@
                             android:id="@+id/full_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Шайхисламов Дамир Арманович"
+                            android:text="Ф.И.О."
                             android:textSize="20sp"
                             android:textColor="@color/colorWhite"/>
 
@@ -59,7 +59,7 @@
                             android:id="@+id/group_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Участник"
+                            android:text="Статус"
                             android:textSize="14sp"
                             android:textColor="@color/colorLight"/>
 
@@ -143,7 +143,6 @@
                                     android:paddingStart="@dimen/six"
                                     android:paddingLeft="@dimen/six"
                                     android:paddingEnd="@dimen/six"
-                                    android:text="88"
                                     android:textSize="22sp"/>
 
                                 <TextView
@@ -151,7 +150,6 @@
                                     android:paddingStart="@dimen/six"
                                     android:paddingLeft="@dimen/six"
                                     android:paddingEnd="@dimen/six"
-                                    android:text="66"
                                     android:textSize="22sp"/>
 
                                 <TextView
@@ -159,7 +157,6 @@
                                     android:paddingStart="@dimen/six"
                                     android:paddingLeft="@dimen/six"
                                     android:paddingEnd="@dimen/six"
-                                    android:text="56"
                                     android:textSize="22sp"/>
 
                                 <TextView
@@ -167,7 +164,6 @@
                                     android:paddingStart="@dimen/six"
                                     android:paddingLeft="@dimen/six"
                                     android:paddingEnd="@dimen/six"
-                                    android:text="72"
                                     android:textSize="22sp"/>
 
                                 <TextView
@@ -175,7 +171,6 @@
                                     android:paddingStart="@dimen/six"
                                     android:paddingLeft="@dimen/six"
                                     android:paddingEnd="@dimen/six"
-                                    android:text="99"
                                     android:textSize="22sp"/>
 
                                 <TextView
@@ -183,7 +178,6 @@
                                     android:paddingStart="@dimen/six"
                                     android:paddingLeft="@dimen/six"
                                     android:paddingEnd="@dimen/six"
-                                    android:text="46"
                                     android:textSize="22sp"/>
                             </TableRow>
                         </TableLayout>
@@ -229,15 +223,13 @@
                                     android:id="@+id/height_value"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:textSize="20sp"
-                                    android:text="177"/>
+                                    android:textSize="20sp"/>
 
                                 <TextView
                                     android:id="@+id/weight_value"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:textSize="20sp"
-                                    android:text="74"/>
+                                    android:textSize="20sp"/>
 
                             </LinearLayout>
 
@@ -288,7 +280,6 @@
                                         android:layout_marginEnd="@dimen/six"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
-                                        android:text="23"
                                         android:textSize="30sp"/>
                                     <TextView
                                         android:id="@+id/target_weight_value"
@@ -297,7 +288,6 @@
                                         android:layout_marginEnd="@dimen/sixteen"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
-                                        android:text="72"
                                         android:textSize="30sp"/>
                                     <TextView
                                         android:id="@+id/ideal_weight_value"
@@ -306,7 +296,6 @@
                                         android:layout_marginEnd="@dimen/six"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
-                                        android:text="68"
                                         android:textSize="30sp"/>
                                 </TableRow>
 

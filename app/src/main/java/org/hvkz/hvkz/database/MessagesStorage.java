@@ -4,84 +4,106 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import org.hvkz.hvkz.HVKZApp;
+import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.utils.serialize.JSONFactory;
 import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
-import org.hvkz.hvkz.xmpp.models.Status;
-import org.jxmpp.stringprep.XmppStringprepException;
+import org.hvkz.hvkz.xmpp.notification_service.NotificationService;
+import org.jivesoftware.smackx.chatstates.ChatState;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
 
 public class MessagesStorage extends AbstractMessageObserver
 {
     private static final String TAG = "MessagesStorage";
+    private static MessagesStorage instance;
+
+    @Inject
+    User user;
 
     private SQLiteDatabase database;
     private MessagesDbHelper messagesDbHelper;
-    private static MessagesStorage instance;
-    private static Gson gson = new GsonBuilder().create();
 
-    private MessagesStorage(Context c)
-    {
-        super("");
+    private MessagesStorage(Context c) {
+        super(null);
+        HVKZApp.component().inject(this);
         this.messagesDbHelper = new MessagesDbHelper(c);
         this.database = messagesDbHelper.getWritableDatabase();
+        try { messagesDbHelper.onCreate(database); }
+        catch (SQLiteException ignored){}
     }
 
     @Override
     public void messageReceived(ChatMessage message) {
-        writeMessage(message);
+        if (!messageExist(message)) {
+            writeMessage(message);
+            NotificationService.getInstance().messageReceived(message);
+        }
     }
 
     @Override
-    public void statusReceived(Status status, String userJid) {
-        if (status == Status.active) markAsRead(userJid);
+    public void statusReceived(ChatState status, BareJid userJid) {
+        if (status == ChatState.active) markAsRead(userJid.getLocalpartOrThrow().intern());
     }
 
-    public ChatMessage getLastMessage(String _jid)
-    {
-        String jid = _jid.split("@")[0];
-        String selection = MessagesDbHelper.CHAT + " == '"+ jid +"'";
-
+    public ChatMessage getLastMessage(BareJid jid) {
+        String chat = jid.getLocalpartOrThrow().intern();
+        String selection = MessagesDbHelper.CHAT + " == '"+ chat +"'";
         Cursor cursor = database.rawQuery(
                 "SELECT * FROM " + MessagesDbHelper.TABLE_NAME +
                         " WHERE " + selection +
                         " ORDER BY " + MessagesDbHelper.ID + " DESC", null
         );
 
-        if (cursor.moveToFirst())
-        {
+        if (cursor.moveToFirst()) {
             int jsonIndex = cursor.getColumnIndex(MessagesDbHelper.JSON);
-            int readIndex = cursor.getColumnIndex(MessagesDbHelper.ISREAD);
+            int readIndex = cursor.getColumnIndex(MessagesDbHelper.READ_MARK);
 
-            ChatMessage message = gson.fromJson(cursor.getString(jsonIndex), ChatMessage.class);
+            ChatMessage message = JSONFactory.fromJson(cursor.getString(jsonIndex), ChatMessage.class);
             message.setRead(cursor.getString(readIndex).equals("1"));
 
             cursor.close();
             return message;
-        }
-        else
-        {
+        } else {
             cursor.close();
             return null;
         }
     }
 
-    public List<ChatMessage> getMessages(String _jid, int limit, int offset)
-    {
-        String jid = _jid.split("@")[0];
+    public boolean messageExist(ChatMessage message) {
+        String query = "Select * from " + MessagesDbHelper.TABLE_NAME + " where " +
+                MessagesDbHelper.JSON + " = '" + JSONFactory.toJson(message) + "'";
+
+        Cursor cursor = database.rawQuery(query, null);
+        boolean result = cursor.getCount() > 0;
+        cursor.close();
+        return result;
+    }
+
+    public List<ChatMessage> getMessages(BareJid chat, int limit, int offset) {
+        return extractMessages(chat.getLocalpartOrThrow().intern(), limit, offset);
+    }
+
+    public List<ChatMessage> getMessages(String chat, int limit, int offset) {
+        return extractMessages(chat, limit, offset);
+    }
+
+    private List<ChatMessage> extractMessages(String chat, int limit, int offset) {
         List<ChatMessage> messages = new ArrayList<>();
 
-        String selection = MessagesDbHelper.CHAT + " == '"+ jid +"'";
+        String selection = MessagesDbHelper.CHAT + " == '"+ chat +"' AND "
+                + MessagesDbHelper.UID + " == " + user.getUserId();
 
         Cursor cursor = database.rawQuery(
                 "SELECT * FROM " + MessagesDbHelper.TABLE_NAME +
@@ -90,13 +112,12 @@ public class MessagesStorage extends AbstractMessageObserver
                         " LIMIT "+ offset +","+ limit, null
         );
 
-        if (cursor.moveToFirst())
-        {
+        if (cursor.moveToFirst()) {
             int jsonIndex = cursor.getColumnIndex(MessagesDbHelper.JSON);
-            int readIndex = cursor.getColumnIndex(MessagesDbHelper.ISREAD);
+            int readIndex = cursor.getColumnIndex(MessagesDbHelper.READ_MARK);
 
             do {
-                ChatMessage message = gson.fromJson(cursor.getString(jsonIndex), ChatMessage.class);
+                ChatMessage message = JSONFactory.fromJson(cursor.getString(jsonIndex), ChatMessage.class);
                 message.setRead(cursor.getString(readIndex).equals("1"));
                 messages.add(message);
             } while (cursor.moveToNext());
@@ -108,44 +129,45 @@ public class MessagesStorage extends AbstractMessageObserver
         return messages;
     }
 
-    public void writeMessage(ChatMessage message)
-    {
-        try {
-            Log.d(TAG, "writeMessage: " + message.getMessage());
-            String chatJid = message.getChatJid().toString().split("@")[0];
+    public void writeMessage(ChatMessage message) {
+        Log.d(TAG, "writeMessage isRead " + message.isRead());
 
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MessagesDbHelper.CHAT, chatJid);
-            contentValues.put(MessagesDbHelper.STANZA_ID, message.getStanzaId());
-            contentValues.put(MessagesDbHelper.JSON, message.buildPacket().getBody());
-            contentValues.put(MessagesDbHelper.ISREAD, message.isRead());
-
-            database.insert(MessagesDbHelper.TABLE_NAME, null, contentValues);
-        } catch (XmppStringprepException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void deleteMessages(Collection<ChatMessage> messageCollection)
-    {
-        for(ChatMessage message: messageCollection)
-            database.delete(MessagesDbHelper.TABLE_NAME, MessagesDbHelper.STANZA_ID + " = '" + message.getStanzaId() + "'", null);
-    }
-
-    public void clearHistory(String jid)
-    {
-        Log.d("clearHistory", jid);
-        database.delete(MessagesDbHelper.TABLE_NAME, MessagesDbHelper.CHAT + " = '" + jid.split("@")[0] + "'", null);
-    }
-
-    public void markAsRead(String jid)
-    {
-        Log.d(TAG, "markAsRead");
-        String buddy = jid.split("@")[0];
         ContentValues contentValues = new ContentValues();
-        contentValues.put(MessagesDbHelper.ISREAD, true);
+        contentValues.put(MessagesDbHelper.UID, user.getUserId());
+        contentValues.put(MessagesDbHelper.CHAT, message.getChatJid().getLocalpart().intern());
+        contentValues.put(MessagesDbHelper.JSON, JSONFactory.toJson(message));
+        contentValues.put(MessagesDbHelper.STANZA_ID, message.getStanzaId());
+        contentValues.put(MessagesDbHelper.READ_MARK, message.isRead());
 
-        database.update(MessagesDbHelper.TABLE_NAME, contentValues, MessagesDbHelper.ISREAD + " == 0 AND " + MessagesDbHelper.CHAT + " == '" + buddy + "'", null);
+        database.insert(MessagesDbHelper.TABLE_NAME, null, contentValues);
+    }
+
+    public void deleteMessages(Collection<ChatMessage> messageCollection) {
+        database.beginTransaction();
+        for(ChatMessage message: messageCollection) {
+            database.delete(MessagesDbHelper.TABLE_NAME, MessagesDbHelper.STANZA_ID + " = '" + message.getStanzaId() + "'", null);
+        }
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
+    }
+
+    public void clearHistory(BareJid jid) {
+        database.delete(MessagesDbHelper.TABLE_NAME,
+                MessagesDbHelper.CHAT + " = '" + jid.getLocalpartOrThrow().intern() + "'", null);
+    }
+
+    public void markAsRead(EntityBareJid chatJid) {
+        markAsRead(chatJid.getLocalpart().intern());
+    }
+
+    public void markAsRead(String chat) {
+        Log.d(TAG, "markAsRead " + chat);
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MessagesDbHelper.READ_MARK, true);
+
+        database.update(MessagesDbHelper.TABLE_NAME, contentValues,
+                MessagesDbHelper.READ_MARK + " == 0 AND " + MessagesDbHelper.CHAT + " == '" + chat + "'", null);
     }
 
     public static MessagesStorage getInstance() {

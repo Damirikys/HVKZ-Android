@@ -55,8 +55,7 @@ public class GalleryStorage
         database.delete(GalleryDbHelper.TABLE_NAME, GalleryDbHelper.PUBLISH_DATE + "=" + String.valueOf(photo.getDate()), null);
     }
 
-    public void clear()
-    {
+    public void clear() {
         database.delete(GalleryDbHelper.TABLE_NAME, null, null);
     }
 

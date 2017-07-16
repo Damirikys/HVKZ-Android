@@ -17,6 +17,8 @@ public interface User extends UserInfo
 
     UserData getUserData();
 
+    String getShortName();
+
     @NonNull
     @Override
     String getEmail();

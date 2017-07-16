@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.hvkz.hvkz.HVKZApp;
+import org.hvkz.hvkz.database.MessagesStorage;
 import org.hvkz.hvkz.firebase.db.groups.GroupsDb;
 import org.hvkz.hvkz.firebase.entities.Group;
 import org.hvkz.hvkz.uapi.models.entities.User;
@@ -18,6 +19,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smackx.chatstates.packet.ChatStateExtension;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
@@ -28,6 +30,7 @@ import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.jid.parts.Resourcepart;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.inject.Inject;
 
@@ -52,16 +55,21 @@ public class ConnectionService extends Service
         public void connected(XMPPConnection xmppConnection) {
             super.connected(connection);
             connection = (AbstractXMPPConnection) xmppConnection;
+            MUCmanager = MultiUserChatManager.getInstanceFor(connection);
+            chatManager = ChatManager.getInstanceFor(connection);
             messageReceiver = MessageReceiver.instanceOf(connection);
 
+            connection.addSyncStanzaListener(messageReceiver, stanza ->
+                    stanza.getExtension(ChatStateExtension.NAMESPACE) != null);
+            chatManager.addIncomingListener(messageReceiver);
+
             try {
+
                 accountManager = AccountManager.getInstance(connection);
                 accountManager.sensitiveOperationOverInsecureConnection(true);
                 accountManager.createAccount(Localpart.from(credentials.getXmppLogin()), credentials.getXmppPassword());
                 connection.login();
             } catch (Exception e) {
-                e.printStackTrace();
-
                 try {
                     connection.login();
                 } catch (XMPPException | SmackException | IOException | InterruptedException e1) {
@@ -73,9 +81,6 @@ public class ConnectionService extends Service
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
             super.authenticated(connection, resumed);
-            MUCmanager = MultiUserChatManager.getInstanceFor(connection);
-            chatManager = ChatManager.getInstanceFor(connection);
-
             GroupsDb.getMyGroups(groups -> {
                 for (Group group : groups) {
                     try {
@@ -86,8 +91,10 @@ public class ConnectionService extends Service
 
                         multiUserChat.addMessageListener(messageReceiver);
                         MucEnterConfiguration config = multiUserChat
-                                .getEnterConfigurationBuilder(Resourcepart.from(user.getDisplayName()))
-                                .requestNoHistory()
+                                .getEnterConfigurationBuilder(Resourcepart.from(String.valueOf(user.getUserId())))
+                                .requestHistorySince(new Date(MessagesStorage.getInstance()
+                                        .getLastMessage(multiUserChat.getRoom())
+                                        .getTimestamp()))
                                 .build();
 
                         multiUserChat.join(config);
@@ -151,6 +158,18 @@ public class ConnectionService extends Service
 
     public AccountManager getAccountManager() {
         return accountManager;
+    }
+
+    public MultiUserChatManager getMUCmanager() {
+        return MUCmanager;
+    }
+
+    public ChatManager getChatManager() {
+        return chatManager;
+    }
+
+    public MessageReceiver getMessageReceiver() {
+        return messageReceiver;
     }
 
     @NonNull

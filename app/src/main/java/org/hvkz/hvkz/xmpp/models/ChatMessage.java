@@ -2,13 +2,13 @@ package org.hvkz.hvkz.xmpp.models;
 
 import android.support.annotation.NonNull;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
+import org.hvkz.hvkz.utils.serialize.JSONFactory;
 import org.hvkz.hvkz.xmpp.XMPPConfiguration;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.delay.packet.DelayInformation;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
@@ -17,101 +17,93 @@ import java.util.List;
 
 public class ChatMessage
 {
-    private static final Gson gson = new GsonBuilder().create();
+    private transient String chatJid;
+    private transient boolean isRead;
 
-    private String stanza_id;
+    private int senderId;
+    private int recipientId;
+    private String body;
+    private List<String> images;
+    private List<ForwardedMessage> forwarded;
+    private long timestamp;
 
-    private int sender;
-    private int recipient;
-    private String chatJid;
-    private String message;
-    private String[] imageAttachments;
-    private ForwardedMessage[] forwardedMessages;
-    private long datetime;
-    private boolean isRead = true;
-
-    public ChatMessage(String message) {
-        this.message = message;
-        this.sender = UAPIUser.getUAPIUser().getUserId();
-        this.datetime = System.currentTimeMillis();
+    public ChatMessage(String body) {
+        this.body = body;
+        this.senderId = UAPIUser.getUAPIUser().getUserId();
+        this.timestamp = System.currentTimeMillis();
     }
 
     public ChatMessage() {
-        this.sender = UAPIUser.getUAPIUser().getUserId();
-        this.datetime = System.currentTimeMillis();
+        this.senderId = UAPIUser.getUAPIUser().getUserId();
+        this.timestamp = System.currentTimeMillis();
     }
 
     public String getStanzaId() {
-        return String.valueOf(datetime);
+        return String.valueOf(timestamp);
     }
 
-    public ChatMessage setStanzaId(String id) {
-        this.stanza_id = id;
+    public String getBody() {
+        return body;
+    }
+
+    public ChatMessage setBody(String _message) {
+        body = _message;
         return this;
     }
 
-    public String getMessage() {
-        return message;
+    public int getSenderId() {
+        return senderId;
     }
 
-    public ChatMessage setMessage(String _message) {
-        message = _message;
-        return this;
-    }
-
-    public int getSender() {
-        return sender;
-    }
-
-    public Jid getSenderJid() {
+    public BareJid getSenderJid() {
         try {
-            return JidCreate.bareFrom(sender + "@" + XMPPConfiguration.DOMAIN);
+            return JidCreate.bareFrom(senderId + "@" + XMPPConfiguration.DOMAIN);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public ChatMessage setSender(int id) {
-        sender = id;
+    public ChatMessage setSenderId(int id) {
+        senderId = id;
         return this;
     }
 
-    public int getRecipient() {
-        return recipient;
+    public int getRecipientId() {
+        return recipientId;
     }
 
-    public Jid getRecipientJid() {
+    public BareJid getRecipientJid() {
         try {
-            return JidCreate.bareFrom(recipient + "@" + XMPPConfiguration.DOMAIN);
+            return JidCreate.bareFrom(recipientId + "@" + XMPPConfiguration.DOMAIN);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public ChatMessage setRecipient(int id) {
-        recipient = id;
-        chatJid = (chatJid == null) ? String.valueOf(recipient) + "@" + XMPPConfiguration.DOMAIN : chatJid;
+    public ChatMessage setRecipientId(int id) {
+        recipientId = id;
+        chatJid = (chatJid == null) ? String.valueOf(recipientId) + "@" + XMPPConfiguration.DOMAIN : chatJid;
         return this;
     }
 
-    public long getDatetime() {
-        return datetime;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public ChatMessage setDatetime(long _datetime) {
-        datetime = _datetime;
+    public ChatMessage setTimestamp(long _datetime) {
+        timestamp = _datetime;
         return this;
     }
 
-    public String[] getImageAttachments() {
-        return imageAttachments;
+    public List<String> getImages() {
+        return images;
     }
 
-    public Jid getChatJid() {
+    public EntityBareJid getChatJid() {
         try {
-            return JidCreate.from(chatJid);
+            return JidCreate.entityBareFrom(chatJid);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             return null;
@@ -123,18 +115,18 @@ public class ChatMessage
         return this;
     }
 
-    public ChatMessage setImageAttachments(String... attachments) {
-        imageAttachments = attachments;
+    public ChatMessage setImages(List<String> attachments) {
+        images = attachments;
         return this;
     }
 
-    public ChatMessage setForwardedMessages(List<ForwardedMessage> messages) {
-        this.forwardedMessages = messages.toArray(new ForwardedMessage[messages.size()]);
+    public ChatMessage setForwarded(List<ForwardedMessage> messages) {
+        this.forwarded = messages;
         return this;
     }
 
-    public ForwardedMessage[] getForwardedMessages() {
-        return forwardedMessages;
+    public List<ForwardedMessage> getForwarded() {
+        return forwarded;
     }
 
     public ChatMessage setRead(boolean bool) {
@@ -147,49 +139,47 @@ public class ChatMessage
     }
 
     public boolean isMine() {
-        return UAPIUser.getUAPIUser().getUserId() == sender;
+        return UAPIUser.getUAPIUser().getUserId() == senderId;
     }
 
-    public Message buildPacket() throws XmppStringprepException {
-        String jsonFormat = gson.toJson(this);
+    public Message buildPacket() {
+        String jsonFormat = JSONFactory.toJson(this);
 
-        Message packet = new Message(JidCreate.domainBareFrom(recipient + "@" + XMPPConfiguration.DOMAIN));
-        packet.setBody(jsonFormat);
+        Message packet = null;
+        try {
+            packet = new Message(chatJid, jsonFormat);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
 
         return packet;
     }
 
-    public static ChatMessage createFrom(@NonNull Message message) throws IllegalArgumentException
-    {
-        DelayInformation delay;
-        delay = (DelayInformation) message.getExtension("urn:xmpp:delay");
-
-        if (message.getBody() == null)
-            throw new IllegalArgumentException("Message body is empty.");
-
-        ChatMessage chatMessage = gson.fromJson(message.getBody(), ChatMessage.class);
-        chatMessage.setStanzaId(message.getStanzaId());
+    public static ChatMessage createFrom(@NonNull Message message) {
+        DelayInformation delay = (DelayInformation) message.getExtension("urn:xmpp:delay");
+        ChatMessage chatMessage = JSONFactory.fromJson(message.getBody(), ChatMessage.class)
+                .setChatJid(message.getFrom().asEntityBareJidOrThrow());
 
         if (delay != null)
-            chatMessage.setDatetime(delay.getStamp().getTime());
+            chatMessage.setTimestamp(delay.getStamp().getTime());
 
         return chatMessage;
     }
 
     public ForwardedMessage toForward() {
         return new ForwardedMessage()
-                .setSender(sender)
-                .setMessage(message)
-                .setImageAttachments(imageAttachments)
-                .setDatetime(datetime);
+                .setSender(senderId)
+                .setMessage(body)
+                .setImages(images)
+                .setTimestamp(timestamp);
     }
 
     public static class ForwardedMessage
     {
         int sender;
         String message;
-        String[] imageAttachments;
-        long datetime;
+        List<String> images;
+        long timestamp;
 
         ForwardedMessage setSender(int id) {
             this.sender = id;
@@ -209,35 +199,35 @@ public class ChatMessage
             return message;
         }
 
-        ForwardedMessage setImageAttachments(String... images) {
-            this.imageAttachments = images;
+        ForwardedMessage setImages(List<String> images) {
+            this.images = images;
             return this;
         }
 
-        public String[] getImageAttachments() {
-            return imageAttachments;
+        public List<String> getImages() {
+            return images;
         }
 
-        ForwardedMessage setDatetime(long _datetime) {
-            this.datetime = _datetime;
+        ForwardedMessage setTimestamp(long _datetime) {
+            this.timestamp = _datetime;
             return this;
         }
 
-        public long getDatetime() {
-            return datetime;
+        public long getTimestamp() {
+            return timestamp;
         }
     }
 
     @Override
     public int hashCode() {
-        return (int) datetime;
+        return (int) timestamp;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ChatMessage) {
             ChatMessage message = (ChatMessage) obj;
-            return (this.datetime == message.datetime) & (this.message.equals(message.message));
+            return (this.timestamp == message.timestamp) & (this.body.equals(message.body));
         } else {
             return false;
         }

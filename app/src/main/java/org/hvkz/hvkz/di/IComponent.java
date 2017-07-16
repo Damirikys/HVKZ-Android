@@ -2,9 +2,11 @@ package org.hvkz.hvkz.di;
 
 import org.hvkz.hvkz.auth.AuthActivity;
 import org.hvkz.hvkz.database.GalleryStorage;
+import org.hvkz.hvkz.database.MessagesStorage;
 import org.hvkz.hvkz.firebase.db.groups.GroupsDb;
 import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
 import org.hvkz.hvkz.modules.MainActivity;
+import org.hvkz.hvkz.modules.chats.window.ChatWindowPresenter;
 import org.hvkz.hvkz.modules.profile.ProfileViewHandler;
 import org.hvkz.hvkz.sync.SyncInteractor;
 import org.hvkz.hvkz.sync.SyncPresenter;
@@ -23,6 +25,10 @@ public interface IComponent
     void inject(AuthActivity activity);
 
     void inject(ConnectionService service);
+
+    void inject(MessagesStorage storage);
+
+    void inject(ChatWindowPresenter chatWindowPresenter);
 
     void inject(GalleryStorage storage);
 

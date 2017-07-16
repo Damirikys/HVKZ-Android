@@ -4,6 +4,9 @@ import android.util.SparseArray;
 
 import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.xmpp.XMPPConfiguration;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 public class Group
 {
@@ -39,6 +42,14 @@ public class Group
 
     public String getGroupAddress() {
         return groupName + "@" + XMPPConfiguration.DOMAIN_CONFERENCE;
+    }
+
+    public EntityBareJid getGroupJid() {
+        try {
+            return JidCreate.entityBareFrom(getGroupAddress());
+        } catch (XmppStringprepException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public SparseArray<User> getMembers() {

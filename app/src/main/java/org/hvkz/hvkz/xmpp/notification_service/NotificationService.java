@@ -17,28 +17,35 @@ import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.stringprep.XmppStringprepException;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class NotificationService extends AbstractMessageObserver
 {
-    private static final NotificationService service = new NotificationService("");
+    private static final NotificationService service = new NotificationService(null);
 
     private final int MESSAGE_NOTIFICATION_ID = 0;
+    private final Set<Jid> locked;
 
-    private NotificationService(String chatJid) {
+    private NotificationService(EntityBareJid chatJid) {
         super(chatJid);
+        this.locked = new HashSet<>();
     }
 
     private void notifyMessageReceived(ChatMessage message) throws
             XMPPException, SmackException, InterruptedException, XmppStringprepException
     {
-        UsersDb.getById(message.getSender(), user -> {
+        UsersDb.getById(message.getSenderId(), user -> {
             String contentTitle, ticker, contentText;
             Intent notificationIntent;
 
-            contentText = (message.getMessage() == null)
+            contentText = (message.getBody() == null)
                     ? "новое сообщение"
-                    : message.getMessage();
+                    : message.getBody();
 
             if (message.getChatJid().equals(message.getSenderJid())) {
                 contentTitle = user.getDisplayName();
@@ -86,17 +93,21 @@ public class NotificationService extends AbstractMessageObserver
     }
 
     @Override
-    public void messageReceived(ChatMessage message)
-    {
-        if (message.getSender() == UAPIUser.getUAPIUser().getUserId())
+    public void messageReceived(ChatMessage message) {
+        if (message.getSenderId() == UAPIUser.getUAPIUser().getUserId() || locked.contains(message.getChatJid()))
             return;
-
-//        if (UserAccount.chatIsOpened(message.getChatJid()))
-//            return;
 
         try { notifyMessageReceived(message); } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void lock(EntityBareJid bareJid) {
+        service.locked.add(bareJid);
+    }
+
+    public static void unlock(EntityBareJid bareJid) {
+        service.locked.remove(bareJid);
     }
 
     public static NotificationService getInstance() {

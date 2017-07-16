@@ -1,0 +1,192 @@
+package org.hvkz.hvkz.modules.chats;
+
+import android.content.Context;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.AttributeSet;
+
+import org.hvkz.hvkz.interfaces.Callback;
+import org.hvkz.hvkz.modules.chats.window.ChatDisposer;
+import org.hvkz.hvkz.xmpp.models.ChatMessage;
+
+import java.util.List;
+
+public class MessagesListView extends RecyclerView
+{
+    private Callback<Void> keyboardCallback;
+    private DateChangeListener dateChangeListener;
+    private LinearLayoutManager layoutManager;
+    private MessagesListOnScrollListener onScrollListener;
+    private MessagesListAdapter messagesListAdapter;
+
+    private final int LIMIT = 30;
+    private int OFFSET = LIMIT * (-1);
+
+    private boolean isScrolling = false;
+    private boolean addMessage = false;
+
+    public MessagesListView(Context context) {
+        super(context);
+    }
+
+    public MessagesListView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public MessagesListView(Context context, @Nullable AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
+    public void init(ChatDisposer disposer,
+                     DateChangeListener dateChangeListener,
+                     Callback<Void> keyboardCallback)
+    {
+        this.keyboardCallback = keyboardCallback;
+        this.dateChangeListener = dateChangeListener;
+        this.onScrollListener = new MessagesListOnScrollListener();
+        this.layoutManager = new LinearLayoutManager(this.getContext());
+        this.messagesListAdapter = new MessagesListAdapter(disposer);
+        this.messagesListAdapter.loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
+
+        List<ChatMessage> firstPage = disposer.loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
+        if (!firstPage.isEmpty() && !firstPage.get(0).isMine()) {
+            messagesListAdapter.markAsRead();
+        }
+
+        this.setItemAnimator(new EmptyItemAnimator());
+        this.setLayoutManager(layoutManager);
+        this.setAdapter(messagesListAdapter);
+        this.addOnScrollListener(onScrollListener);
+        this.layoutManager.scrollToPosition(
+                (messagesListAdapter.getItemCount() != 0)
+                        ? messagesListAdapter.getItemCount() - 1
+                        : 0
+        );
+    }
+
+    public void addNewMessage(ChatMessage message) {
+        post(() -> {
+            messagesListAdapter.addMyMessage(message);
+            if (!isScrolling) {
+                addMessage = true;
+                smoothScrollToPosition(messagesListAdapter.getItemCount() - 1);
+            }
+        });
+    }
+
+    public void addReceivedMessage(ChatMessage message) {
+        post(() -> {
+            messagesListAdapter.addMessage(message);
+            if (!isScrolling) {
+                addMessage = true;
+                smoothScrollToPosition(messagesListAdapter.getItemCount() - 1);
+            }
+
+            messagesListAdapter.markAsRead();
+        });
+    }
+
+    public void deleteMessages(List<ChatMessage> messages) {
+        post(() -> messagesListAdapter.removeAll(messages));
+    }
+
+    public MessagesListAdapter getAdapter()
+    {
+        return this.messagesListAdapter;
+    }
+
+    public void scrollToBottom() {
+        if (layoutManager == null) return;
+        post(() -> layoutManager.scrollToPosition(messagesListAdapter.getItemCount() - 1));
+    }
+
+    public void onDestroy() {
+        onScrollListener.onDestroy();
+        removeOnScrollListener(onScrollListener);
+    }
+
+    /* OnScrollListener for MessagesListView */
+    private final class MessagesListOnScrollListener extends RecyclerView.OnScrollListener
+    {
+        private VisibilityDate visibilityDate;
+        private boolean isLoading = false,
+                isEnd = false;
+
+        MessagesListOnScrollListener() {
+            this.visibilityDate = new VisibilityDate();
+            this.visibilityDate.start();
+
+        }
+
+        void onDestroy() {
+            visibilityDate.kill();
+        }
+
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+
+            int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+            int firstVisibleItems = layoutManager.findFirstVisibleItemPosition();
+
+            isScrolling = lastVisibleItem != messagesListAdapter.getItemCount() - 1;
+
+            if (isScrolling) {
+                if (!addMessage) keyboardCallback.call(null);
+                dateChangeListener.onDateUpdate(messagesListAdapter.getItem(firstVisibleItems));
+                visibilityDate.setVisible(true);
+            } else {
+                addMessage = false;
+            }
+
+            if (isEnd) return;
+
+            if (!isLoading) {
+                if (firstVisibleItems == 0) {
+                    isLoading = true;
+                    List<ChatMessage> newPage = messagesListAdapter.loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
+
+                    if (newPage.size() == 0) {
+                        isEnd = true;
+                        return;
+                    }
+
+                    isLoading = false;
+                }
+            }
+        }
+
+        private final class VisibilityDate extends Thread
+        {
+            private boolean isRunning = true;
+            private volatile boolean visible = false;
+
+            public void run(){
+                while (isRunning) {
+                    if (visible) {
+                        try {
+                            dateChangeListener.setDateVisibility(true);
+                            visible = false;
+                            sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        if (!visible) {
+                            dateChangeListener.setDateVisibility(false);
+                        }
+                    }
+                }
+            }
+
+            void kill() {
+                isRunning = false;
+            }
+
+            void setVisible(boolean bool) {
+                visible = bool;
+            }
+        }
+    }
+}

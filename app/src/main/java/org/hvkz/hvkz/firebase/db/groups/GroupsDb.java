@@ -80,6 +80,26 @@ public class GroupsDb
         }
     }
 
+    public static void getGroupByName(String name, Callback<Group> callback) {
+        if (GROUPS_DB.allGroups != null) {
+            for (Group group : GROUPS_DB.allGroups) {
+                if (name.equals(group.getGroupName())) {
+                    callback.call(group);
+                    return;
+                }
+            }
+        } else {
+            getAll(groups -> {
+                for (Group group : groups) {
+                    if (name.equals(group.getGroupName())) {
+                        callback.call(group);
+                        return;
+                    }
+                }
+            });
+        }
+    }
+
     private static List<Group> findMyGroups(List<Group> groups) {
         List<Group> result = new LinkedList<>();
         for (Group group : groups) {

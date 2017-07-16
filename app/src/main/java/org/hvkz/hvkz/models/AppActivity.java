@@ -18,6 +18,7 @@ import org.hvkz.hvkz.annotations.Layout;
 import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.Destroyable;
 import org.hvkz.hvkz.utils.controllers.PermissionController;
+import org.hvkz.hvkz.xmpp.LocalBinder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,6 @@ public abstract class AppActivity<T extends Destroyable> extends AppCompatActivi
 
         progressDialog = new ProgressDialog(this);
         permissionManager = PermissionController.checkAndRequestPermission(this);
-
         presenter = createPresenter();
     }
 
@@ -56,6 +56,10 @@ public abstract class AppActivity<T extends Destroyable> extends AppCompatActivi
         }
 
         return presenter;
+    }
+
+    public <S> LocalBinder<S> getLocalBinder(Class<S> tClass) {
+        return new LocalBinder<S>(null);
     }
 
     @Override

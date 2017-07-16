@@ -20,6 +20,12 @@ public class ImagesProvider implements View.OnClickListener
         this.position = position;
     }
 
+    public ImagesProvider(List<String> urls, int position) {
+        this.imageUrls = new String[urls.size()];
+        this.imageUrls = urls.toArray(imageUrls);
+        this.position = position;
+    }
+
     @Override
     public void onClick(View view)
     {

@@ -170,16 +170,20 @@ public class ProfileViewHandler extends ViewHandler
         heightValue.setText(height = userData.getField(UserData.GROWTH));
         weightValue.setText(weight = userData.getField(UserData.WEIGHT));
 
-        double w = Double.valueOf(weight);
-        double h = Double.valueOf(height);
+        try {
+            double w = Double.valueOf(weight);
+            double h = Double.valueOf(height);
 
-        int imt = (int) ((w / (h*h)) * 10000);
-        int idealWeight = (int) ((h-100)*0.85);
+            int imt = (int) ((w / (h*h)) * 10000);
+            int idealWeight = (int) ((h-100)*0.85);
 
-        imtValue.setText(String.valueOf(imt));
+            imtValue.setText(String.valueOf(imt));
+            idealWeightValue.setText(String.valueOf(idealWeight));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         targetWeightValue.setText(userData.getField(UserData.DESIRED_WEIGHT));
-        idealWeightValue.setText(String.valueOf(idealWeight));
-
 
         Glide.with(context())
                 .load(user.getPhotoUrl())

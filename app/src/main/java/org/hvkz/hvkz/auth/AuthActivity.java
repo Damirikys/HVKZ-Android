@@ -42,6 +42,8 @@ public class AuthActivity extends AppActivity<AuthPresenter> implements AuthCall
     @BindView(R.id.splash_screen)
     FrameLayout splashScreen;
 
+    private boolean codeSend;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +65,9 @@ public class AuthActivity extends AppActivity<AuthPresenter> implements AuthCall
             }, new IntentFilter(ACTION_SMS_RECEIVE));
 
             phoneEditText.setOnKeyListener((v, keyCode, event) -> {
-                signInButton.setEnabled(NumberValidator.numberIsCorrect(phoneEditText.getUnmaskedText()));
+                if (!codeSend) {
+                    signInButton.setEnabled(NumberValidator.numberIsCorrect(phoneEditText.getUnmaskedText()));
+                }
                 return false;
             });
 
@@ -78,7 +82,7 @@ public class AuthActivity extends AppActivity<AuthPresenter> implements AuthCall
             signInButton.setEnabled(false);
 
             getPresenter().verifyPhoneNumber(phoneEditText.getUnmaskedText());
-
+            codeSend = true;
             new CountDownTimer(60000, 1000)
             {
                 @Override
@@ -91,6 +95,7 @@ public class AuthActivity extends AppActivity<AuthPresenter> implements AuthCall
                 public void onFinish() {
                     signInButton.setText(getString(R.string.action_code_sent));
                     signInButton.setEnabled(true);
+                    codeSend = false;
                 }
             }.start();
         } else {

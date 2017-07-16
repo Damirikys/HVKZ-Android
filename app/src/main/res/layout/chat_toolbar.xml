@@ -1,0 +1,129 @@
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+                                   xmlns:app="http://schemas.android.com/apk/res-auto"
+                                   xmlns:tools="http://schemas.android.com/tools"
+                                   android:id="@+id/toolbar"
+                                   android:layout_width="match_parent"
+                                   android:layout_height="50dp"
+                                   app:titleTextColor="#ffffff"
+                                   android:elevation="2dp"
+                                   android:background="@color/colorPrimary"
+                                   tools:ignore="UnusedAttribute">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/toolbartape"
+            android:orientation="horizontal"
+            android:visibility="visible"
+            android:padding="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/buddy_avatar"
+                android:src="@mipmap/noavatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginRight="@dimen/six"
+                app:border_color="#00ffffff" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="2dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Name"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#ffffff"
+                    android:id="@+id/buddy_name" />
+
+                <TextView
+                    android:layout_marginTop="-3dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="не в диалоге"
+                    android:textColor="#b48f2a"
+                    android:id="@+id/buddy_status" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/selectedMode"
+            android:visibility="invisible"
+            android:padding="4dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                android:text="Выбрано: "/>
+
+            <TextView
+                android:id="@+id/selectedNum"
+                android:gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                android:text="0"/>
+
+            <LinearLayout
+                android:gravity="right"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+
+                <RelativeLayout
+                    android:padding="10dp"
+                    android:onClick="reSendMessages"
+                    android:background="@drawable/ripple_effect"
+                    android:clickable="true"
+                    android:layout_gravity="center_vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@mipmap/resend"/>
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:padding="10dp"
+                    android:onClick="deleteMessages"
+                    android:background="@drawable/ripple_effect"
+                    android:clickable="true"
+                    android:layout_gravity="center_vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@mipmap/delete"/>
+
+                </RelativeLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</android.support.v7.widget.Toolbar>

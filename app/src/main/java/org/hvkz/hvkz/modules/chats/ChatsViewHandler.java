@@ -38,7 +38,7 @@ public class ChatsViewHandler extends ViewHandler
                 groupsRecyclerView.setAdapter(
                         groupsAdapter = new GroupsAdapter(value, group -> {
                             navigationView.setVisibility(View.GONE);
-                            router.moveToChat(group.getGroupAddress());
+                            router.moveToChat(ChatType.MULTI_USER_CHAT, group.getGroupName());
                         })
                 )
         );
