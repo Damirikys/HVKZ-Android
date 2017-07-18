@@ -89,10 +89,7 @@ public class MainActivity extends AppActivity<IBasePresenter>
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
-        ((AppFragment<IBasePresenter>) getSupportFragmentManager()
-                .findFragmentById(R.id.fragmentContainer))
-                .getPresenter()
-                .onResultReceive(requestCode, resultCode, imageReturnedIntent);
+        navigationController.onResultReceived(requestCode, resultCode, imageReturnedIntent);
     }
 
     @Override

@@ -1,4 +1,5 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 xmlns:card_view="http://schemas.android.com/apk/res-auto"
@@ -8,7 +9,7 @@
 
     <include layout="@layout/chat_toolbar" />
 
-    <org.hvkz.hvkz.modules.chats.MessagesListView
+    <org.hvkz.hvkz.modules.chats.window.MessagesListView
         android:layout_marginTop="50dp"
         android:id="@+id/msgListView"
         android:scrollbars="vertical"
@@ -17,22 +18,42 @@
         android:clipToPadding="false"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/form" />
+        android:layout_above="@+id/attachments" />
 
     <HorizontalScrollView
-        android:id="@+id/imagesView"
-        android:visibility="invisible"
+        android:id="@+id/attachments"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#e4e4e4"
+        android:background="@color/colorWhite"
         android:scrollbars="none"
-        android:layout_above="@+id/form">
+        android:layout_above="@+id/form"
+        android:elevation="10dp"
+        tools:ignore="UnusedAttribute">
 
         <LinearLayout
-            android:orientation="horizontal"
-            android:id="@+id/photoattachments"
+            android:orientation="vertical"
             android:layout_width="wrap_content"
-            android:layout_height="70dp" />
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:visibility="gone"
+                android:orientation="horizontal"
+                android:id="@+id/img_attach"
+                android:layout_width="wrap_content"
+                android:layout_height="70dp"/>
+
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/forwardedInfo"
+                android:layout_margin="@dimen/six"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/attachments_shadow"
+                android:textColor="@color/colorTitle"
+                android:padding="@dimen/six"/>
+
+        </LinearLayout>
 
     </HorizontalScrollView>
 
@@ -42,10 +63,13 @@
         android:layout_height="wrap_content"
         android:padding="5dp"
         android:layout_alignParentBottom="true"
-        android:background="#ffffff"
-        android:orientation="horizontal">
+        android:background="@color/colorWhite"
+        android:orientation="horizontal"
+        android:elevation="10dp"
+        tools:ignore="UnusedAttribute">
 
         <LinearLayout
+            android:id="@+id/pickPhotoLayout"
             android:layout_width="50dp"
             android:layout_height="match_parent"
             android:paddingTop="8dp"
@@ -71,7 +95,7 @@
             android:layout_width="0dp"
             android:inputType="textCapSentences|textAutoCorrect|textMultiLine|textAutoComplete"
             android:maxLines="4"
-            android:hint="Введите текст сообщения..."
+            android:hint="@string/type_the_message"
             android:textColorHint="#b4b4b4"
             android:textSize="17sp"
             android:background="@android:color/transparent"
@@ -81,6 +105,7 @@
             android:layout_weight="1" />
 
         <LinearLayout
+            android:id="@+id/sendMessageLayout"
             android:layout_width="50dp"
             android:layout_height="match_parent"
             android:padding="8dp"

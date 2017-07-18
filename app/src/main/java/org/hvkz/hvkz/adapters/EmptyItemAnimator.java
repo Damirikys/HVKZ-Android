@@ -1,4 +1,4 @@
-package org.hvkz.hvkz.modules.chats;
+package org.hvkz.hvkz.adapters;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

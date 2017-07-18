@@ -1,5 +1,6 @@
 package org.hvkz.hvkz.xmpp.models;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
@@ -13,18 +14,20 @@ import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ChatMessage
 {
     private transient String chatJid;
     private transient boolean isRead;
+    private transient Forwarded forwardedThis;
 
     private int senderId;
     private int recipientId;
     private String body;
     private List<String> images;
-    private List<ForwardedMessage> forwarded;
+    private List<Forwarded> forwarded;
     private long timestamp;
 
     public ChatMessage(String body) {
@@ -115,17 +118,19 @@ public class ChatMessage
         return this;
     }
 
-    public ChatMessage setImages(List<String> attachments) {
-        images = attachments;
+    public ChatMessage setImages(List<Uri> attachments) {
+        images = new ArrayList<>();
+        for (Uri uri : attachments)
+            images.add(uri.toString());
         return this;
     }
 
-    public ChatMessage setForwarded(List<ForwardedMessage> messages) {
-        this.forwarded = messages;
+    public ChatMessage setForwarded(List<Forwarded> messages) {
+        this.forwarded = new ArrayList<>(messages);
         return this;
     }
 
-    public List<ForwardedMessage> getForwarded() {
+    public List<Forwarded> getForwarded() {
         return forwarded;
     }
 
@@ -166,22 +171,24 @@ public class ChatMessage
         return chatMessage;
     }
 
-    public ForwardedMessage toForward() {
-        return new ForwardedMessage()
+    public Forwarded toForward() {
+        if (forwardedThis != null)
+            return forwardedThis;
+        else return forwardedThis = new Forwarded()
                 .setSender(senderId)
                 .setMessage(body)
                 .setImages(images)
                 .setTimestamp(timestamp);
     }
 
-    public static class ForwardedMessage
+    public static class Forwarded
     {
         int sender;
         String message;
         List<String> images;
         long timestamp;
 
-        ForwardedMessage setSender(int id) {
+        Forwarded setSender(int id) {
             this.sender = id;
             return this;
         }
@@ -190,7 +197,7 @@ public class ChatMessage
             return sender;
         }
 
-        ForwardedMessage setMessage(String _message) {
+        Forwarded setMessage(String _message) {
             this.message = _message;
             return this;
         }
@@ -199,7 +206,7 @@ public class ChatMessage
             return message;
         }
 
-        ForwardedMessage setImages(List<String> images) {
+        Forwarded setImages(List<String> images) {
             this.images = images;
             return this;
         }
@@ -208,7 +215,7 @@ public class ChatMessage
             return images;
         }
 
-        ForwardedMessage setTimestamp(long _datetime) {
+        Forwarded setTimestamp(long _datetime) {
             this.timestamp = _datetime;
             return this;
         }

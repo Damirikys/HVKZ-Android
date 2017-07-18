@@ -1,13 +1,14 @@
-package org.hvkz.hvkz.modules.chats;
+package org.hvkz.hvkz.modules.chats.window;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 
+import org.hvkz.hvkz.adapters.EmptyItemAnimator;
 import org.hvkz.hvkz.interfaces.Callback;
-import org.hvkz.hvkz.modules.chats.window.ChatDisposer;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
 
 import java.util.List;
@@ -101,9 +102,14 @@ public class MessagesListView extends RecyclerView
         post(() -> layoutManager.scrollToPosition(messagesListAdapter.getItemCount() - 1));
     }
 
+    public boolean isScrolling() {
+        return isScrolling;
+    }
+
     public void onDestroy() {
-        onScrollListener.onDestroy();
         removeOnScrollListener(onScrollListener);
+        onScrollListener.onDestroy();
+        messagesListAdapter.onDestroy();
     }
 
     /* OnScrollListener for MessagesListView */
@@ -120,7 +126,7 @@ public class MessagesListView extends RecyclerView
         }
 
         void onDestroy() {
-            visibilityDate.kill();
+            visibilityDate.interrupt();
         }
 
         @Override
@@ -129,6 +135,8 @@ public class MessagesListView extends RecyclerView
 
             int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
             int firstVisibleItems = layoutManager.findFirstVisibleItemPosition();
+
+            if (firstVisibleItems < 0) return;
 
             isScrolling = lastVisibleItem != messagesListAdapter.getItemCount() - 1;
 
@@ -159,32 +167,31 @@ public class MessagesListView extends RecyclerView
 
         private final class VisibilityDate extends Thread
         {
-            private boolean isRunning = true;
             private volatile boolean visible = false;
 
-            public void run(){
-                while (isRunning) {
-                    if (visible) {
-                        try {
+            public void run() {
+                try {
+                    while (!isInterrupted()) {
+                        Log.d(getName(), "running");
+                        if (visible) {
                             dateChangeListener.setDateVisibility(true);
                             visible = false;
-                            sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            sleep(1000);
+
+                            if (!visible) {
+                                dateChangeListener.setDateVisibility(false);
+                            }
                         }
 
-                        if (!visible) {
-                            dateChangeListener.setDateVisibility(false);
-                        }
+                        sleep(300);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    interrupt();
                 }
             }
 
-            void kill() {
-                isRunning = false;
-            }
-
-            void setVisible(boolean bool) {
+            synchronized void setVisible(boolean bool) {
                 visible = bool;
             }
         }

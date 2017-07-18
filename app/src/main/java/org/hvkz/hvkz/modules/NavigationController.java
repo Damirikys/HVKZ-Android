@@ -1,5 +1,6 @@
 package org.hvkz.hvkz.modules;
 
+import android.content.Intent;
 import android.support.annotation.AnimRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
@@ -11,6 +12,7 @@ import android.view.MenuItem;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.interfaces.Callback;
+import org.hvkz.hvkz.interfaces.IBasePresenter;
 import org.hvkz.hvkz.models.AppFragment;
 import org.hvkz.hvkz.models.FragmentContainer;
 import org.hvkz.hvkz.modules.chats.ChatRouter;
@@ -67,7 +69,7 @@ public class NavigationController implements BottomNavigationView.OnNavigationIt
             }
         }
 
-        transaction = transaction.setCustomAnimations(enter, exit);
+        //transaction = transaction.setCustomAnimations(enter, exit);
 
         if (fragment != null) {
             transaction = transaction.show(fragment);
@@ -91,6 +93,17 @@ public class NavigationController implements BottomNavigationView.OnNavigationIt
             fragmentManager.popBackStack();
         } else {
             callback.call(null);
+        }
+    }
+
+    public void onResultReceived(int requestCode, int resultCode, Intent data) {
+        for (Fragment fragment : fragmentManager.getFragments()) {
+            try {
+                ((AppFragment<IBasePresenter>) fragment).getPresenter()
+                        .onResultReceive(requestCode, resultCode, data);
+            } catch (ClassCastException e) {
+                e.printStackTrace();
+            }
         }
     }
 

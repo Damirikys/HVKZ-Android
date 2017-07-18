@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.util.Log;
 
 import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.R;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 public class NotificationService extends AbstractMessageObserver
 {
+    private static final String TAG = "NotificationService";
     private static final NotificationService service = new NotificationService(null);
 
     private final int MESSAGE_NOTIFICATION_ID = 0;
@@ -103,10 +105,12 @@ public class NotificationService extends AbstractMessageObserver
     }
 
     public static void lock(EntityBareJid bareJid) {
+        Log.d(TAG, "locked: " + bareJid.asEntityBareJidString());
         service.locked.add(bareJid);
     }
 
     public static void unlock(EntityBareJid bareJid) {
+        Log.d(TAG, "unlocked: " + bareJid.asEntityBareJidString());
         service.locked.remove(bareJid);
     }
 

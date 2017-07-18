@@ -28,7 +28,7 @@ public abstract class FBStorageExecutor
             mStorage = FirebaseStorage.getInstance().getReference();
         }
 
-        public void upload(final Uri fileUri) {
+        public synchronized void upload(final Uri fileUri) {
             final StorageReference photoRef = mStorage.child(dir)
                     .child(fileUri.getLastPathSegment());
 
@@ -42,7 +42,7 @@ public abstract class FBStorageExecutor
                     .addOnFailureListener(callback::onFailure);
         }
 
-        public void delete(final Uri file) {
+        public synchronized void delete(final Uri file) {
             mStorage.child(file.getLastPathSegment())
                     .delete()
                     .addOnCompleteListener(task -> {

@@ -40,7 +40,7 @@ dependencies {
 
     compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
     compile group: 'com.github.chrisbanes.photoview', name: 'library', version: '1.2.4'
-
+    compile 'com.github.eralpyucel:CircleProgressView:v1.1'
     compile 'com.squareup.retrofit2:converter-gson:2.3.0'
     compile 'org.igniterealtime.smack:smack-android:4.2.0'
     compile 'org.igniterealtime.smack:smack-android-extensions:4.2.0'

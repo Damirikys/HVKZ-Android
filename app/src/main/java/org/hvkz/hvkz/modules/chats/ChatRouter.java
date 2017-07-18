@@ -1,14 +1,16 @@
 package org.hvkz.hvkz.modules.chats;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 
 import org.hvkz.hvkz.R;
+import org.hvkz.hvkz.interfaces.IBasePresenter;
 import org.hvkz.hvkz.models.AppFragment;
 import org.hvkz.hvkz.models.Router;
 import org.hvkz.hvkz.modules.chats.window.ChatWindowFragment;
 
-public class ChatRouter extends Router
+public class ChatRouter extends Router implements IBasePresenter
 {
     public static final String DOMAIN_KEY = "org.hvkz.chats.DOMAIN_KEY";
     public static final String CHAT_TYPE_KEY = "org.hvkz.chats.CHAT_TYPE_KEY";
@@ -28,9 +30,20 @@ public class ChatRouter extends Router
 
         getFragmentManager()
                 .beginTransaction()
-                .setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
                 .replace(containerId, chatWindowFragment)
                 .addToBackStack(null)
                 .commit();
+    }
+
+    @Override
+    public void onResultReceive(int requestCode, int resultCode, Intent dataIntent) {
+        try {
+            ((AppFragment<IBasePresenter>) getFragmentManager()
+                    .findFragmentById(containerId))
+                    .getPresenter()
+                    .onResultReceive(requestCode, resultCode, dataIntent);
+        } catch (ClassCastException e) {
+            e.printStackTrace();
+        }
     }
 }

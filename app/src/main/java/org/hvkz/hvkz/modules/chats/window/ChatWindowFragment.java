@@ -14,6 +14,8 @@ import static org.hvkz.hvkz.modules.chats.ChatRouter.DOMAIN_KEY;
 @Layout(R.layout.fragment_chat_window)
 public class ChatWindowFragment extends AppFragment<ChatWindowPresenter>
 {
+    public static final int GALLERY_REQUEST = 2;
+
     @Override
     protected ChatWindowPresenter bindPresenter() {
         Bundle bundle = getArguments();
@@ -25,5 +27,17 @@ public class ChatWindowFragment extends AppFragment<ChatWindowPresenter>
         } catch (XmppStringprepException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getPresenter().onChatShowed();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        getPresenter().onChatHidden();
     }
 }

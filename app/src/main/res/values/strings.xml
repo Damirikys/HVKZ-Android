@@ -92,4 +92,5 @@
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="email_description">Укажите E-mail адрес, с помощью которого вы зарегистрировались на нашем сайте hvkz.org. Доступ к приложению откроется после синхронизации с Вашей анкетой на сайте.</string>
     <string name="continue_text">Продолжить</string>
+    <string name="type_the_message">Введите сообщение ...</string>
 </resources>

@@ -35,6 +35,8 @@ public class XMPPCredentials
             Matcher makeMatch = intsOnly.matcher(hmacPassword);
             makeMatch.find();
 
+            System.out.println("HMAC PASSWORD " + hmacPassword);
+
             return makeMatch.group();
         } catch (SignatureException | NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException(e);

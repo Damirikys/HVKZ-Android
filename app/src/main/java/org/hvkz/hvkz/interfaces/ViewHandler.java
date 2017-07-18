@@ -1,31 +1,36 @@
 package org.hvkz.hvkz.interfaces;
 
+import android.app.Activity;
 import android.content.Context;
 
 import org.hvkz.hvkz.models.ViewBinder;
 
 public abstract class ViewHandler implements Destroyable
 {
-    private BaseWindow activity;
+    private BaseWindow window;
 
     public ViewHandler(BaseWindow baseWindow) {
-        this.activity = baseWindow;
-        ViewBinder.handle(this, activity.getActivity());
-        handle(activity.getContext());
+        this.window = baseWindow;
+        ViewBinder.handle(this, window.getActivity());
+        handle(window.getContext());
     }
 
     public Context context() {
-        return activity.getContext();
+        return window.getContext();
     }
 
-    protected BaseWindow getActivity() {
-        return activity;
+    public Activity activity() {
+        return window.getActivity();
+    }
+
+    protected BaseWindow getWindow() {
+        return window;
     }
 
     protected abstract void handle(Context context);
 
     @Override
     public void onDestroy() {
-        activity = null;
+        window = null;
     }
 }

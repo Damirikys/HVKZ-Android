@@ -8,7 +8,6 @@ import org.hvkz.hvkz.modules.chats.ChatType;
 import org.hvkz.hvkz.xmpp.ConnectionService;
 import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
-import org.hvkz.hvkz.xmpp.notification_service.NotificationService;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
@@ -29,7 +28,6 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
         this.chatJid = bareJid;
         this.storage = MessagesStorage.getInstance();
         this.observers = new ArrayList<>();
-        NotificationService.lock(chatJid);
     }
 
     public abstract void sendMessage(ChatMessage message) throws SmackException.NotConnectedException, InterruptedException;
@@ -82,7 +80,6 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
     public void onDestroy() {
         observers.clear();
         observers = null;
-        NotificationService.unlock(chatJid);
     }
 
     public static ChatDisposer obtain(ConnectionService service, ChatType chatType, String domain)

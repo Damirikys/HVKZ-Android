@@ -1,4 +1,4 @@
-package org.hvkz.hvkz.modules.chats;
+package org.hvkz.hvkz.modules.chats.window;
 
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
 

@@ -13,6 +13,7 @@ import org.hvkz.hvkz.firebase.entities.Group;
 import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
 import org.hvkz.hvkz.xmpp.message_service.MessageReceiver;
+import org.hvkz.hvkz.xmpp.models.ChatMessage;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
@@ -67,6 +68,7 @@ public class ConnectionService extends Service
 
                 accountManager = AccountManager.getInstance(connection);
                 accountManager.sensitiveOperationOverInsecureConnection(true);
+                System.out.println("XMPP PASSWORD: " + credentials.getXmppPassword());
                 accountManager.createAccount(Localpart.from(credentials.getXmppLogin()), credentials.getXmppPassword());
                 connection.login();
             } catch (Exception e) {
@@ -90,14 +92,20 @@ public class ConnectionService extends Service
                         ));
 
                         multiUserChat.addMessageListener(messageReceiver);
-                        MucEnterConfiguration config = multiUserChat
-                                .getEnterConfigurationBuilder(Resourcepart.from(String.valueOf(user.getUserId())))
-                                .requestHistorySince(new Date(MessagesStorage.getInstance()
-                                        .getLastMessage(multiUserChat.getRoom())
-                                        .getTimestamp()))
-                                .build();
+                        ChatMessage lastMessage = MessagesStorage.getInstance()
+                                .getLastMessage(multiUserChat.getRoom());
 
-                        multiUserChat.join(config);
+                        MucEnterConfiguration.Builder configBuilder = multiUserChat
+                                .getEnterConfigurationBuilder(Resourcepart.from(String.valueOf(user.getUserId())));
+
+                        if (lastMessage == null) {
+                            multiUserChat.join(configBuilder.build());
+                        } else {
+                            MucEnterConfiguration config = configBuilder
+                                    .requestHistorySince(new Date(lastMessage.getTimestamp()))
+                                    .build();
+                            multiUserChat.join(config);
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

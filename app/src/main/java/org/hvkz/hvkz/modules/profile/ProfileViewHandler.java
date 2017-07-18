@@ -146,7 +146,7 @@ public class ProfileViewHandler extends ViewHandler
                 (view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
                     if(view.getChildAt(view.getChildCount() - 1) != null) {
                         if ((scrollY  >= (view.getChildAt(view.getChildCount() - 1).getMeasuredHeight()
-                                - ((Fragment) getActivity()).getView().getMeasuredHeight())) &&
+                                - ((Fragment) getWindow()).getView().getMeasuredHeight())) &&
                                 scrollY > oldScrollY)
                         {
                             if (!isLoading) loadMore();
@@ -195,6 +195,6 @@ public class ProfileViewHandler extends ViewHandler
     public void pickPhotoAction() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
-        getActivity().getActivity().startActivityForResult(photoPickerIntent, GALLERY_REQUEST);
+        getWindow().getActivity().startActivityForResult(photoPickerIntent, GALLERY_REQUEST);
     }
 }
