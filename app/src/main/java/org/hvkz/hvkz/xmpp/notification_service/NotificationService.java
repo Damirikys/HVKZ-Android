@@ -27,7 +27,7 @@ import java.util.Set;
 
 public class NotificationService extends AbstractMessageObserver
 {
-    private static final String TAG = "NotificationService";
+    private static final String TAG = "ConnectionService";
     private static final NotificationService service = new NotificationService(null);
 
     private final int MESSAGE_NOTIFICATION_ID = 0;

@@ -1,6 +1,7 @@
 package org.hvkz.hvkz.modules.profile.gallery;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,7 +15,9 @@ import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.database.GalleryStorage;
 import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
 import org.hvkz.hvkz.firebase.entities.Photo;
+import org.hvkz.hvkz.firebase.storage.PhotoUploader;
 import org.hvkz.hvkz.modules.gallery.ImagesProvider;
+import org.hvkz.hvkz.utils.network.ExecuteCallbackAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,23 +97,27 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
 
             AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
             builder.setTitle("Выберите действие")
-                    .setItems(new String[]{"Удалить"}, (dialog, which) ->
-                    {
-                        PhotosDb.remove(photo, result -> {
-                            if (result) {
-                                GalleryStorage.getInstance().remove(photo);
-                                items.remove(getAdapterPosition());
-                                notifyItemRemoved(getAdapterPosition());
-                            } else {
-                                new AlertDialog.Builder(context)
-                                        .setMessage("Не удалось удалить фотографию.")
-                                        .create()
-                                        .show();
-                            }
-                        });
+                    .setItems(new String[]{"Удалить"}, (dialog, which) -> PhotoUploader.with(context)
+                            .callback(new ExecuteCallbackAdapter<Photo>() {
+                                @Override
+                                public void onRemoved() {
+                                    PhotosDb.remove(photo, result -> {
+                                        if (result) {
+                                            GalleryStorage.getInstance().remove(photo);
+                                            items.remove(getAdapterPosition());
+                                            notifyItemRemoved(getAdapterPosition());
+                                        } else {
+                                            new AlertDialog.Builder(context)
+                                                    .setMessage("Не удалось удалить фотографию.")
+                                                    .create()
+                                                    .show();
+                                        }
+                                    });
 
-                        dialog.dismiss();
-                    });
+                                    dialog.dismiss();
+                                }
+                            })
+                            .delete(Uri.parse(photo.getUrl())));
 
             builder.create().show();
             return true;

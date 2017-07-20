@@ -29,7 +29,7 @@ public class ProfilePresenter extends BasePresenter implements FBStorageExecutor
     public void uploadImage(Uri image) {
         PhotoUploader.with(getContext())
                 .callback(this)
-                .execute(image);
+                .upload(image);
     }
 
     @Override

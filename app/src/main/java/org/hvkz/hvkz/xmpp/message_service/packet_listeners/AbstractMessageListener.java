@@ -1,7 +1,7 @@
 package org.hvkz.hvkz.xmpp.message_service.packet_listeners;
 
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
-import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
@@ -9,9 +9,9 @@ import org.jxmpp.jid.EntityBareJid;
 public abstract class AbstractMessageListener extends AbstractPacketListener
 {
     private BareJid userJid;
-    private AbstractXMPPConnection connection;
+    private XMPPConnection connection;
 
-    protected AbstractMessageListener(AbstractXMPPConnection connection) {
+    protected AbstractMessageListener(XMPPConnection connection) {
         this.connection = connection;
     }
 

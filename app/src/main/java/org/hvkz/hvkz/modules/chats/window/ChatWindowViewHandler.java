@@ -193,6 +193,7 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
         photoAttachmentsExecutor.clear();
         forwardedMessages.clear();
         imageAttachView.removeAllViews();
+        imageAttachView.setVisibility(View.GONE);
         forwardedTextAttach.setVisibility(View.GONE);
         setAttachmentsVisible(false);
         messagesListView.getAdapter().notifyDataSetChanged();

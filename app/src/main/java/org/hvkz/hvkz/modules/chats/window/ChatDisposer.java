@@ -87,6 +87,8 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
         switch (chatType) {
             case MULTI_USER_CHAT:
                 return new GroupChatDisposer(service, domain);
+            case PERSONAL_CHAT:
+                return new PersonalChatDisposer(service, domain);
             default:
                 return null;
         }

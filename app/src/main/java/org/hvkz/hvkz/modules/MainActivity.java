@@ -19,8 +19,11 @@ import org.hvkz.hvkz.interfaces.IBasePresenter;
 import org.hvkz.hvkz.models.AppActivity;
 import org.hvkz.hvkz.models.AppFragment;
 import org.hvkz.hvkz.modules.profile.ProfileFragment;
+import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.xmpp.ConnectionService;
 import org.hvkz.hvkz.xmpp.LocalBinder;
+
+import javax.inject.Inject;
 
 @SuppressWarnings("unchecked")
 @Layout(R.layout.activity_main)
@@ -29,6 +32,9 @@ public class MainActivity extends AppActivity<IBasePresenter>
     public static final int GALLERY_REQUEST = 1;
 
     private static final String TAG = "MainActivity";
+
+    @Inject
+    User user;
 
     @BindView(R.id.fragmentContainer)
     private FrameLayout fragmentContainer;
@@ -61,7 +67,7 @@ public class MainActivity extends AppActivity<IBasePresenter>
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         HVKZApp.component().inject(this);
-        startService(serviceIntent =  new Intent(this, ConnectionService.class));
+        startService(serviceIntent = new Intent(this, ConnectionService.class));
 
         navigation.setOnNavigationItemSelectedListener(navigationController =
                 new NavigationController(R.id.fragmentContainer, getSupportFragmentManager()));

@@ -1,6 +1,7 @@
 package org.hvkz.hvkz.modules.chats.window;
 
 import android.graphics.Color;
+import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayout;
 import android.support.v7.widget.RecyclerView;
@@ -17,12 +18,16 @@ import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.firebase.db.users.UsersDb;
 import org.hvkz.hvkz.models.ViewBinder;
+import org.hvkz.hvkz.modules.RouteChannel;
+import org.hvkz.hvkz.modules.chats.ChatType;
 import org.hvkz.hvkz.modules.gallery.ImagesProvider;
 import org.hvkz.hvkz.utils.Tools;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
 
 import java.util.List;
 
+import static org.hvkz.hvkz.modules.chats.ChatRouter.CHAT_TYPE_KEY;
+import static org.hvkz.hvkz.modules.chats.ChatRouter.DOMAIN_KEY;
 import static org.hvkz.hvkz.utils.Tools.dpToPx;
 
 public class MessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener
@@ -72,6 +77,7 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
     public void bindMessage(ChatMessage _message) {
         this.message = _message;
 
+        messageText.setVisibility(View.VISIBLE);
         messageText.setText(message.getBody());
         timeView.setText(Tools.getTimeFromUnix(message.getTimestamp()));
         messageTape.setBackgroundColor(Color.argb(0, 0, 0, 0));
@@ -182,6 +188,12 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
 
         if (beforeMessage == null || beforeMessage.getSenderId() != message.getSenderId()) {
             photo.setVisibility(View.VISIBLE);
+            photo.setOnClickListener(v -> {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(CHAT_TYPE_KEY, ChatType.PERSONAL_CHAT);
+                bundle.putString(DOMAIN_KEY, String.valueOf(message.getSenderId()));
+                RouteChannel.sendRouteRequest(new RouteChannel.RouteRequest(bundle));
+            });
 
             UsersDb.getById(message.getSenderId(), user -> Glide.with(photo.getContext())
                     .load(user.getPhotoUrl())

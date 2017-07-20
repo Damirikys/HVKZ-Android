@@ -19,14 +19,12 @@ public class XMPPConfiguration
 
     private XMPPConfiguration() {
         try {
-            XMPPCredentials credentials = XMPPCredentials.getCredentials();
             configuration = XMPPTCPConnectionConfiguration.builder()
                     .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
                     .setResource(RESOURCE)
                     .setXmppDomain(DOMAIN)
                     .setHost(HOST)
                     .setPort(PORT)
-                    .setUsernameAndPassword(credentials.getXmppLogin(), credentials.getXmppPassword())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException(e);

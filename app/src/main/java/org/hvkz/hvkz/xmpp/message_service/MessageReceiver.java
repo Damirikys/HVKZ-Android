@@ -5,7 +5,7 @@ import android.util.Log;
 import org.hvkz.hvkz.database.MessagesStorage;
 import org.hvkz.hvkz.xmpp.message_service.packet_listeners.AbstractMessageListener;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
-import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
@@ -18,7 +18,7 @@ public class MessageReceiver extends AbstractMessageListener
     private Set<AbstractMessageObserver> observers;
     private Set<MessageObserver> permanentObservers;
 
-    private MessageReceiver(AbstractXMPPConnection connection) {
+    private MessageReceiver(XMPPConnection connection) {
         super(connection);
         this.observers = new HashSet<>();
         this.permanentObservers = new HashSet<MessageObserver>() {{
@@ -68,7 +68,7 @@ public class MessageReceiver extends AbstractMessageListener
         }
     }
 
-    public static MessageReceiver instanceOf(AbstractXMPPConnection connection) {
+    public static MessageReceiver instanceOf(XMPPConnection connection) {
         return new MessageReceiver(connection);
     }
 }

@@ -31,8 +31,8 @@
     <style name="Theme.Transparent" parent="AppTheme.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowNoTitle">true</item>
-        <!--<item name="android:windowAnimationStyle">@null</item>-->
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>

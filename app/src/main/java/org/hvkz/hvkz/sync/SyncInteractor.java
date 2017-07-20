@@ -69,8 +69,6 @@ public final class SyncInteractor
 
         @Override
         public void onFailure(@NonNull Call<UAPIUserResponse> call, @NonNull Throwable t) {
-            System.out.println("ON FAILURE");
-
             if (callback != null) callback.onFailed(t);
         }
 

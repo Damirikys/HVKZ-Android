@@ -8,12 +8,21 @@ import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.interfaces.IBasePresenter;
 import org.hvkz.hvkz.models.AppFragment;
 import org.hvkz.hvkz.models.Router;
+import org.hvkz.hvkz.modules.RouteChannel;
 import org.hvkz.hvkz.modules.chats.window.ChatWindowFragment;
 
 public class ChatRouter extends Router implements IBasePresenter
 {
     public static final String DOMAIN_KEY = "org.hvkz.chats.DOMAIN_KEY";
     public static final String CHAT_TYPE_KEY = "org.hvkz.chats.CHAT_TYPE_KEY";
+
+    @Override
+    public void onRouteRequest(RouteChannel.RouteRequest request) {
+        Bundle args = request.getArgs();
+        if (args.getString(DOMAIN_KEY) != null) {
+            moveToChat((ChatType) args.getSerializable(CHAT_TYPE_KEY), args.getString(DOMAIN_KEY));
+        }
+    }
 
     @Override
     protected FragmentTransaction getBaseTransaction(FragmentTransaction transaction) {

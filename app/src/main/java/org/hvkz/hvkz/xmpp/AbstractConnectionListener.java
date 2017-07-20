@@ -11,27 +11,27 @@ public abstract class AbstractConnectionListener implements ConnectionListener
 
     @Override
     public void connected(XMPPConnection connection) {
-        Log.d(TAG, "CONNECTED!");
+        Log.d(TAG, "Connected!");
     }
 
     @Override
     public void authenticated(XMPPConnection connection, boolean resumed) {
-        Log.d(TAG, "AUTHENTICATED!");
+        Log.d(TAG, "Authenticated!");
     }
 
     @Override
     public void connectionClosed() {
-        Log.d(TAG, "CONNECTION CLOSED!");
+        Log.d(TAG, "Connection closed!");
     }
 
     @Override
     public void connectionClosedOnError(Exception e) {
-        Log.d(TAG, "CONNECTION ABORTED!");
+        Log.d(TAG, "Connection aborted!");
     }
 
     @Override
     public void reconnectionSuccessful() {
-        Log.d(TAG, "RECONNECTION SUCCESSFUL!");
+        Log.d(TAG, "Recconection successful!");
     }
 
     @Override
@@ -41,6 +41,6 @@ public abstract class AbstractConnectionListener implements ConnectionListener
 
     @Override
     public void reconnectionFailed(Exception e) {
-        Log.d(TAG, "RECONNECTION FAILED!");
+        Log.d(TAG, "Recconection failed.");
     }
 }

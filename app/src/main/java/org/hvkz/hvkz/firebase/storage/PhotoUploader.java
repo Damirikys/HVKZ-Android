@@ -51,7 +51,7 @@ public class PhotoUploader implements FBStorageExecutor.ExecuteCallback<Uri>
         return this;
     }
 
-    public void execute(Uri image) {
+    public void upload(Uri image) {
         this.imageView.setImageURI(image);
         this.imageView.setAlpha(0.4f);
 
@@ -79,6 +79,10 @@ public class PhotoUploader implements FBStorageExecutor.ExecuteCallback<Uri>
 
         alertDialog.show();
         storageExecutor.upload(image);
+    }
+
+    public void delete(Uri image) {
+        storageExecutor.delete(image);
     }
 
     @Override

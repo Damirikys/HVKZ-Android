@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
 
 import org.hvkz.hvkz.adapters.EmptyItemAnimator;
 import org.hvkz.hvkz.interfaces.Callback;
@@ -172,7 +171,6 @@ public class MessagesListView extends RecyclerView
             public void run() {
                 try {
                     while (!isInterrupted()) {
-                        Log.d(getName(), "running");
                         if (visible) {
                             dateChangeListener.setDateVisibility(true);
                             visible = false;

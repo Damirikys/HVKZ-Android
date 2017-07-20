@@ -12,6 +12,10 @@ public final class UAPIUser
         this.currentUser = user;
     }
 
+    public static boolean isSynced() {
+        return UAPI_USER != null;
+    }
+
     public static void setCurrentUser(User user) {
         UAPI_USER = new UAPIUser(user);
         UsersDb.update();
