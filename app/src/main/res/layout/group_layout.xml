@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/six"
         android:clickable="true"
-        android:foreground="@drawable/ripple_effect"
+        android:foreground="@drawable/ripple_default"
         app:cardElevation="4dp"
         app:cardCornerRadius="5dp">
 
@@ -74,39 +74,87 @@
                 android:background="@color/colorLight"/>
 
             <LinearLayout
+                android:id="@+id/lastMessageLayout"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="@dimen/sixteen">
 
-                <FrameLayout
-                    android:layout_weight="9"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left">
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
 
                     <de.hdodenhof.circleimageview.CircleImageView
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:background="@color/colorAccent"/>
+                        android:id="@+id/photo_last"
+                        android:src="@drawable/noavatar"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        app:border_width="1dp"
+                        app:border_color="#00000000"/>
 
-                </FrameLayout>
+                </RelativeLayout>
 
-                <TextView
-                    android:layout_weight="3"
-                    android:layout_gravity="center"
+                <LinearLayout
+                    android:paddingLeft="@dimen/sixteen"
+                    android:paddingRight="@dimen/sixteen"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Я вот думаю cтремна =("/>
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_weight="9"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
-                    android:textColor="@color/colorTitle"
-                    android:textSize="12sp"
-                    android:text="18:34"/>
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/lastMessageName"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="#424242"
+                            android:textSize="14sp"
+                            android:text="Contact name"/>
+
+                        <TextView
+                            android:id="@+id/time_last"
+                            android:gravity="right"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="#b7b7b7"
+                            android:text="00:00"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/text_last"
+                            android:layout_marginTop="5dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:maxLines="2"
+                            android:textSize="14sp"
+                            android:textColor="#757575"
+                            android:text="печатает..." />
+
+                        <com.bhargavms.dotloader.DotLoader
+                            android:id="@+id/typing_indicator"
+                            android:visibility="invisible"
+                            android:layout_width="wrap_content"
+                            android:layout_height="10dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_alignParentRight="true"
+                            android:layout_marginLeft="@dimen/sixteen"
+                            app:color_array="@array/dot_colors"
+                            app:dot_radius="3dp"
+                            app:number_of_dots="3"/>
+
+                    </RelativeLayout>
+
+                </LinearLayout>
 
             </LinearLayout>
 

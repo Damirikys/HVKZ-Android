@@ -5,8 +5,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.uapi.models.UAPIClient;
-import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
 import org.hvkz.hvkz.uapi.models.entities.User;
 
 import dagger.Module;
@@ -15,6 +15,12 @@ import dagger.Provides;
 @Module
 public class DependencyProvider
 {
+    private HVKZApp app;
+
+    public DependencyProvider(HVKZApp app) {
+        this.app = app;
+    }
+
     @Provides
     public FirebaseUser provideUser() {
         return FirebaseAuth.getInstance().getCurrentUser();
@@ -27,11 +33,11 @@ public class DependencyProvider
 
     @Provides
     public UAPIClient provideUAPIClient() {
-        return UAPIClient.getInstance();
+        return app.getUAPIclient();
     }
 
     @Provides
     public User provideUAPIUser() {
-        return UAPIUser.getUAPIUser();
+        return app.getCurrentUser();
     }
 }

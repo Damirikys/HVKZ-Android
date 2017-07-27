@@ -11,9 +11,10 @@ import android.widget.Toast;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.BindView;
-import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
+import org.hvkz.hvkz.firebase.db.photos.PhotosStorage;
 import org.hvkz.hvkz.firebase.entities.Photo;
 import org.hvkz.hvkz.models.ViewBinder;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.FBStorageExecutor;
 
 import io.netopen.hotbitmapgg.library.view.RingProgressBar;
@@ -22,6 +23,7 @@ public class PhotoUploader implements FBStorageExecutor.ExecuteCallback<Uri>
 {
     private FBStorageExecutor.StorageExecutor storageExecutor;
     private FBStorageExecutor.ExecuteCallback<Photo> callback;
+    private PhotosStorage photosStorage;
     private Uri uploadedUri;
     private boolean isCanceled;
     private View layout;
@@ -36,6 +38,7 @@ public class PhotoUploader implements FBStorageExecutor.ExecuteCallback<Uri>
     private RingProgressBar progressBar;
 
     private PhotoUploader(Context context) {
+        this.photosStorage = ContextApp.getApp(context).getPhotosStorage();
         this.storageExecutor = FBStorageExecutor.execute(FBStorageExecutor.PHOTO_DIR, this);
         this.isCanceled = false;
 
@@ -101,7 +104,7 @@ public class PhotoUploader implements FBStorageExecutor.ExecuteCallback<Uri>
                 .setDate(System.currentTimeMillis())
                 .setDescription(description);
 
-        PhotosDb.upload(photo, value -> {
+        photosStorage.upload(photo, value -> {
             if (value) {
                 if (callback != null) callback.onUploaded(photo);
             } else {

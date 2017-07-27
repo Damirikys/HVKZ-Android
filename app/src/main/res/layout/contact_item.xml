@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:id="@+id/dialogItem"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:background="@drawable/ripple_contacts"
+        android:padding="@dimen/sixteen">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/dialogAvatar"
+                android:src="@drawable/noavatar"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:border_width="1dp"
+                app:border_color="#00000000"/>
+
+            <View
+                android:id="@+id/status_online"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_margin="4dp"
+                android:layout_alignBottom="@id/dialogAvatar"
+                android:layout_alignRight="@id/dialogAvatar"
+                android:background="@drawable/offline"/>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:paddingLeft="@dimen/sixteen"
+            android:paddingRight="@dimen/sixteen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/dialogName"
+                    android:textStyle="bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#424242"
+                    android:textSize="16sp"
+                    android:text="Contact name"/>
+
+                <TextView
+                    android:id="@+id/timestamp"
+                    android:gravity="right"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#b7b7b7"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/lastMessage"
+                    android:layout_marginTop="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="2"
+                    android:textSize="14sp"
+                    android:textColor="#757575"
+                    android:text="печатает..." />
+
+                <com.bhargavms.dotloader.DotLoader
+                    android:id="@+id/typing_indicator"
+                    android:visibility="invisible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="10dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginLeft="@dimen/sixteen"
+                    app:color_array="@array/dot_colors"
+                    app:dot_radius="3dp"
+                    app:number_of_dots="3"/>
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="310dp"
+        android:layout_height="1dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/dialogItem"
+        android:background="@color/colorLight"/>
+
+</RelativeLayout>

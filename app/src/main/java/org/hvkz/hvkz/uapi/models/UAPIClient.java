@@ -27,11 +27,9 @@ import static org.hvkz.hvkz.uapi.oauth.OAuthSignature.ENCODING;
 
 public class UAPIClient
 {
-    private static final UAPIClient uapiClient = new UAPIClient();
-
     private final UAPIBackend uapiBackend;
 
-    private UAPIClient() {
+    public UAPIClient() {
         uapiBackend = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -105,9 +103,5 @@ public class UAPIClient
 
     public long getTimestamp() {
         return System.currentTimeMillis() / 1000;
-    }
-
-    public static UAPIClient getInstance() {
-        return uapiClient;
     }
 }

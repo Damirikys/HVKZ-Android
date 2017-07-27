@@ -9,13 +9,13 @@ import android.view.ViewGroup;
 
 import org.hvkz.hvkz.annotations.Layout;
 import org.hvkz.hvkz.interfaces.BaseWindow;
-import org.hvkz.hvkz.interfaces.Destroyable;
+import org.hvkz.hvkz.interfaces.IBasePresenter;
 
 @SuppressWarnings("unchecked")
-public abstract class AppFragment<T extends Destroyable> extends Fragment implements BaseWindow
+public abstract class AppFragment<T extends IBasePresenter> extends Fragment implements BaseWindow<T>
 {
-    private BaseWindow parent;
-    private T presenter;
+    private BaseWindow<T> parent;
+    private IBasePresenter presenter;
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -30,29 +30,24 @@ public abstract class AppFragment<T extends Destroyable> extends Fragment implem
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        parent = (BaseWindow) getActivity();
+        parent = (BaseWindow<T>) getActivity();
         presenter = bindPresenter();
-    }
-
-    public static <T extends Fragment> T instanceOf(Class<T> tClass) {
-        try {
-          return tClass.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        presenter.init();
     }
 
     protected abstract T bindPresenter();
 
     public T getPresenter() {
-        if (presenter == null) {
-            presenter = bindPresenter();
-        }
-
-        return presenter;
+        if (presenter == null) presenter = bindPresenter();
+        return (T) presenter;
     }
 
-    protected BaseWindow getParentActivity() {
+    @Override
+    public void onBackPressed() {
+        getParentActivity().onBackPressed();
+    }
+
+    protected BaseWindow<T> getParentActivity() {
         return parent;
     }
 
@@ -69,6 +64,18 @@ public abstract class AppFragment<T extends Destroyable> extends Fragment implem
     @Override
     public void dialogMessage(String title, String message) {
         getParentActivity().dialogMessage(title, message);
+    }
+
+    public static <T extends Fragment> T instanceOf(Class<T> tClass) {
+        try {
+            return tClass.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static AppFragment<IBasePresenter> of(Fragment fragment) {
+        return (AppFragment<IBasePresenter>) fragment;
     }
 
     @Override

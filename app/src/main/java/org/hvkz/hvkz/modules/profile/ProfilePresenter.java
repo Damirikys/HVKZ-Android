@@ -10,12 +10,13 @@ import org.hvkz.hvkz.firebase.storage.PhotoUploader;
 import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.ViewHandler;
 import org.hvkz.hvkz.models.BasePresenter;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.FBStorageExecutor;
 
 import static android.app.Activity.RESULT_OK;
 import static org.hvkz.hvkz.modules.MainActivity.GALLERY_REQUEST;
 
-public class ProfilePresenter extends BasePresenter implements FBStorageExecutor.ExecuteCallback<Photo>
+public class ProfilePresenter extends BasePresenter<ProfilePresenter> implements FBStorageExecutor.ExecuteCallback<Photo>
 {
     private static final String TAG = "ProfilePresenter";
 
@@ -23,11 +24,11 @@ public class ProfilePresenter extends BasePresenter implements FBStorageExecutor
 
     public ProfilePresenter(BaseWindow activity) {
         super(activity);
-        galleryStorage = GalleryStorage.getInstance();
+        galleryStorage = ContextApp.getApp(activity.getContext()).getGalleryStorage();
     }
 
     public void uploadImage(Uri image) {
-        PhotoUploader.with(getContext())
+        PhotoUploader.with(context())
                 .callback(this)
                 .upload(image);
     }
@@ -59,7 +60,7 @@ public class ProfilePresenter extends BasePresenter implements FBStorageExecutor
     }
 
     @Override
-    protected ViewHandler createViewHandler(BaseWindow activity) {
+    protected ViewHandler<ProfilePresenter> createViewHandler(BaseWindow<ProfilePresenter> activity) {
         return new ProfileViewHandler(activity);
     }
 

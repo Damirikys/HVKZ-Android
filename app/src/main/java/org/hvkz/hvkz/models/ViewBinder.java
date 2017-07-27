@@ -31,7 +31,7 @@ public final class ViewBinder
             if (method.isAnnotationPresent(OnClick.class)) {
                 activity.findViewById(method.getAnnotation(OnClick.class).value()).setOnClickListener(v -> {
                     try {
-                        method.invoke(target);
+                        method.invoke(target, v);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -39,7 +39,7 @@ public final class ViewBinder
             } else if (method.isAnnotationPresent(OnLongClick.class)) {
                 activity.findViewById(method.getAnnotation(OnLongClick.class).value()).setOnLongClickListener(v -> {
                     try {
-                        method.invoke(target);
+                        method.invoke(target, v);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -68,7 +68,7 @@ public final class ViewBinder
             if (method.isAnnotationPresent(OnClick.class)) {
                 view.findViewById(method.getAnnotation(OnClick.class).value()).setOnClickListener(v -> {
                     try {
-                        method.invoke(target);
+                        method.invoke(target, v);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -76,7 +76,7 @@ public final class ViewBinder
             } else if (method.isAnnotationPresent(OnLongClick.class)) {
                 view.findViewById(method.getAnnotation(OnLongClick.class).value()).setOnLongClickListener(v -> {
                     try {
-                        method.invoke(target);
+                        method.invoke(target, v);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

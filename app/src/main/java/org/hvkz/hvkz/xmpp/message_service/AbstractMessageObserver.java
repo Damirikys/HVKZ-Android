@@ -1,6 +1,7 @@
 package org.hvkz.hvkz.xmpp.message_service;
 
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
@@ -23,7 +24,12 @@ public abstract class AbstractMessageObserver implements MessageObserver
         // Stub
     }
 
-    EntityBareJid getChatJid() {
+    @Override
+    public void presenceReceived(Presence.Type type) {
+        // Stub
+    }
+
+    public EntityBareJid getChatJid() {
         return chatJid;
     }
 }

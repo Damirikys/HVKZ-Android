@@ -21,6 +21,7 @@ public class XMPPConfiguration
         try {
             configuration = XMPPTCPConnectionConfiguration.builder()
                     .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
+                    .setSendPresence(true)
                     .setResource(RESOURCE)
                     .setXmppDomain(DOMAIN)
                     .setHost(HOST)
@@ -32,8 +33,11 @@ public class XMPPConfiguration
     }
 
     public static AbstractXMPPConnection connectionInstance(AbstractConnectionListener connectionListener) {
-        AbstractXMPPConnection connection = new XMPPTCPConnection(new XMPPConfiguration().configuration);
+        XMPPTCPConnection connection = new XMPPTCPConnection(new XMPPConfiguration().configuration);
         connection.addConnectionListener(connectionListener);
+        connection.setUseStreamManagement(true);
+        connection.setUseStreamManagementResumption(true);
+
         return connection;
     }
 }

@@ -19,6 +19,8 @@ public interface User extends UserInfo
 
     String getShortName();
 
+    long getRegTimestamp();
+
     @NonNull
     @Override
     String getEmail();

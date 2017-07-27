@@ -110,6 +110,10 @@ public class UserProfile implements User
         return devices;
     }
 
+    public void setDevices(TokenManager devices) {
+        this.devices = devices;
+    }
+
     @Override
     public UserData getUserData() {
         return new UserData(signature, yahoo, state);
@@ -129,8 +133,9 @@ public class UserProfile implements User
         return shortName;
     }
 
-    public String getRegDate() {
-        return reg_date_timestamp;
+    @Override
+    public long getRegTimestamp() {
+        return Long.valueOf(reg_date_timestamp);
     }
 
     public String getCity() {

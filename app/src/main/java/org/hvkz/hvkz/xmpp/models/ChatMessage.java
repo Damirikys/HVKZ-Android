@@ -1,13 +1,13 @@
 package org.hvkz.hvkz.xmpp.models;
 
+import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
-import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.serialize.JSONFactory;
 import org.hvkz.hvkz.xmpp.XMPPConfiguration;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.delay.packet.DelayInformation;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
@@ -19,7 +19,7 @@ import java.util.List;
 
 public class ChatMessage
 {
-    private transient String chatJid;
+    private transient Jid chatJid;
     private transient boolean isRead;
     private transient Forwarded forwardedThis;
 
@@ -30,15 +30,13 @@ public class ChatMessage
     private List<Forwarded> forwarded;
     private long timestamp;
 
-    public ChatMessage(String body) {
+    public ChatMessage(Context context, String body) {
         this.body = body;
-        this.senderId = UAPIUser.getUAPIUser().getUserId();
-        this.timestamp = System.currentTimeMillis();
+        this.senderId = ContextApp.getApp(context).getCurrentUser().getUserId();
     }
 
-    public ChatMessage() {
-        this.senderId = UAPIUser.getUAPIUser().getUserId();
-        this.timestamp = System.currentTimeMillis();
+    public ChatMessage(Context context) {
+        this.senderId = ContextApp.getApp(context).getCurrentUser().getUserId();
     }
 
     public String getStanzaId() {
@@ -58,9 +56,9 @@ public class ChatMessage
         return senderId;
     }
 
-    public BareJid getSenderJid() {
+    public EntityBareJid getSenderJid() {
         try {
-            return JidCreate.bareFrom(senderId + "@" + XMPPConfiguration.DOMAIN);
+            return JidCreate.entityBareFrom(senderId + "@" + XMPPConfiguration.DOMAIN);
         } catch (XmppStringprepException e) {
             e.printStackTrace();
             return null;
@@ -87,7 +85,11 @@ public class ChatMessage
 
     public ChatMessage setRecipientId(int id) {
         recipientId = id;
-        chatJid = (chatJid == null) ? String.valueOf(recipientId) + "@" + XMPPConfiguration.DOMAIN : chatJid;
+        try {
+            chatJid = (chatJid == null) ? JidCreate.bareFrom(String.valueOf(recipientId) + "@" + XMPPConfiguration.DOMAIN) : chatJid;
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
         return this;
     }
 
@@ -114,7 +116,7 @@ public class ChatMessage
     }
 
     public ChatMessage setChatJid(Jid jid) {
-        chatJid = jid.toString();
+        chatJid = jid;
         return this;
     }
 
@@ -143,32 +145,24 @@ public class ChatMessage
         return isRead;
     }
 
-    public boolean isMine() {
-        return UAPIUser.getUAPIUser().getUserId() == senderId;
+    public boolean isMine(Context context) {
+        return ContextApp.getApp(context).getCurrentUser().getUserId() == senderId;
     }
 
-    public Message buildPacket() {
-        String jsonFormat = JSONFactory.toJson(this);
+    public Message buildPacket(Message.Type type) {
+        String jsonFormat = JSONFactory.toJson(this.setTimestamp(System.currentTimeMillis()));
 
-        Message packet = null;
-        try {
-            packet = new Message(chatJid, jsonFormat);
-        } catch (XmppStringprepException e) {
-            e.printStackTrace();
-        }
+        Message packet = new Message();
+        packet.setBody(jsonFormat);
+        packet.setTo(chatJid);
+        packet.setType(type);
 
         return packet;
     }
 
     public static ChatMessage createFrom(@NonNull Message message) {
-        DelayInformation delay = (DelayInformation) message.getExtension("urn:xmpp:delay");
-        ChatMessage chatMessage = JSONFactory.fromJson(message.getBody(), ChatMessage.class)
-                .setChatJid(message.getFrom().asEntityBareJidOrThrow());
-
-        if (delay != null)
-            chatMessage.setTimestamp(delay.getStamp().getTime());
-
-        return chatMessage;
+        return JSONFactory.fromJson(message.getBody(), ChatMessage.class)
+                .setChatJid(message.getFrom().asBareJid());
     }
 
     public Forwarded toForward() {

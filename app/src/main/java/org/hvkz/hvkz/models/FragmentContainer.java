@@ -15,11 +15,10 @@ public class FragmentContainer extends AppFragment<Router>
 
     @Override
     protected Router bindPresenter() {
-        return router.handleFragmentManager(this.getChildFragmentManager());
+        return router.handleParent(this);
     }
 
     public static FragmentContainer with(Router router) {
-        return AppFragment.instanceOf(FragmentContainer.class)
-                .bindRouter(router);
+        return AppFragment.instanceOf(FragmentContainer.class).bindRouter(router);
     }
 }

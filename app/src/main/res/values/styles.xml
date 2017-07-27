@@ -35,6 +35,17 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
+    <style name="MyDialogTheme" parent="AlertDialog.AppCompat.Light">
+
+        <!-- No backgrounds, titles or window float -->
+        <item name="android:windowBackground">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+
+        <!-- Just to prove it's working -->
+        <item name="android:background">@color/colorLight</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>

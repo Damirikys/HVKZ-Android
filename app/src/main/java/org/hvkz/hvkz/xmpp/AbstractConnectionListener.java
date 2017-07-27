@@ -11,7 +11,7 @@ public abstract class AbstractConnectionListener implements ConnectionListener
 
     @Override
     public void connected(XMPPConnection connection) {
-        Log.d(TAG, "Connected!");
+        Log.d(TAG, "Connected! Authenticated: " + connection.isAuthenticated());
     }
 
     @Override

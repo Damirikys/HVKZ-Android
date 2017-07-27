@@ -5,42 +5,78 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.TextView;
 
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.BindView;
-import org.hvkz.hvkz.firebase.db.groups.GroupsDb;
 import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.ViewHandler;
 import org.hvkz.hvkz.models.FragmentContainer;
+import org.hvkz.hvkz.utils.ContextApp;
 
-public class ChatsViewHandler extends ViewHandler
+import java.util.LinkedList;
+import java.util.List;
+
+import static org.hvkz.hvkz.firebase.db.groups.GroupsStorage.LOCAL;
+
+public class ChatsViewHandler extends ViewHandler<ChatsPresenter>
 {
     @BindView(R.id.groupsRecyclerView)
     private RecyclerView groupsRecyclerView;
+
+    @BindView(R.id.contactsRecyclerView)
+    private RecyclerView contactsRecyclerView;
+
+    @BindView(R.id.contacts_title)
+    private TextView contactsTitle;
+
     private View navigationView;
 
-    private ChatRouter router;
     private GroupsAdapter groupsAdapter;
+    private ContactsAdapter contactsAdapter;
 
-    public ChatsViewHandler(BaseWindow activity) {
+    public ChatsViewHandler(BaseWindow<ChatsPresenter> activity) {
         super(activity);
         FragmentContainer fragmentContainer = (FragmentContainer) ((Fragment) activity).getParentFragment();
         this.navigationView = fragmentContainer.getActivity().findViewById(R.id.navigation);
-        this.router = (ChatRouter) fragmentContainer.getPresenter();
     }
 
     @Override
     protected void handle(Context context) {
+        HVKZApp hvkzApp = ContextApp.getApp(context);
+
         groupsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         groupsRecyclerView.setNestedScrollingEnabled(false);
+        contactsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+        contactsRecyclerView.setNestedScrollingEnabled(false);
 
-        GroupsDb.getMyGroups(value ->
-                groupsRecyclerView.setAdapter(
-                        groupsAdapter = new GroupsAdapter(value, group -> {
-                            navigationView.setVisibility(View.GONE);
-                            router.moveToChat(ChatType.MULTI_USER_CHAT, group.getGroupName());
-                        })
-                )
-        );
+        List<Integer> contacts = new LinkedList<>();
+        for (String chat : hvkzApp.getMessagesStorage().getExistedChats()) {
+            try {
+                contacts.add(Integer.valueOf(chat));
+            } catch (NumberFormatException ignored) {}
+        }
+
+        if (contacts.size() > 0) {
+            contactsTitle.setVisibility(View.GONE);
+            hvkzApp.getUsersStorage().getProfilesFromCache(contacts, value -> {
+                if (contactsAdapter != null) contactsAdapter.onDestroy();
+                contactsRecyclerView.setAdapter(contactsAdapter = new ContactsAdapter(context, value));
+            });
+        }
+
+        hvkzApp.getGroupsStorage()
+                .getMyGroups(LOCAL, value ->
+                        groupsRecyclerView.setAdapter(groupsAdapter = new GroupsAdapter(context, value)));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (contactsAdapter != null)
+            contactsAdapter.onDestroy();
+        if (groupsAdapter != null)
+            groupsAdapter.onDestroy();
     }
 }

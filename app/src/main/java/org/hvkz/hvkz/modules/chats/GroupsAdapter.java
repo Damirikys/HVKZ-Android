@@ -1,30 +1,47 @@
 package org.hvkz.hvkz.modules.chats;
 
-import android.support.v7.widget.CardView;
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.R;
-import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.firebase.entities.Group;
-import org.hvkz.hvkz.interfaces.Callback;
-import org.hvkz.hvkz.models.ViewBinder;
+import org.hvkz.hvkz.interfaces.Destroyable;
+import org.hvkz.hvkz.utils.ContextApp;
+import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
+import org.hvkz.hvkz.xmpp.models.ChatMessage;
+import org.jivesoftware.smackx.chatstates.ChatState;
+import org.jxmpp.jid.BareJid;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class GroupsAdapter extends RecyclerView.Adapter<GroupsAdapter.GroupsViewHolder>
+public class GroupsAdapter extends RecyclerView.Adapter<GroupsViewHolder> implements Destroyable
 {
-    private Callback<Group> onClickListener;
-    private List<Group> groups;
+    private HVKZApp app;
+    private Handler handler;
+    private List<GroupItem> groupItems;
 
-    public GroupsAdapter(List<Group> groups, Callback<Group> onClickListener) {
-        this.groups = groups;
-        this.onClickListener = onClickListener;
+    public GroupsAdapter(Context context, List<Group> groups) {
+        this.app = ContextApp.getApp(context);
+        this.handler = new Handler(Looper.getMainLooper());
+        initGroups(groups);
+    }
+
+    private void initGroups(List<Group> groups) {
+        this.groupItems = new ArrayList<>();
+
+        app.bindConnectionService(service -> {
+            for (Group group : groups) {
+                GroupItem groupItem = new GroupItem(GroupsAdapter.this, group);
+                groupItems.add(groupItem);
+                service.getMessageReceiver().subscribe(groupItem);
+            }
+        });
     }
 
     @Override
@@ -35,54 +52,79 @@ public class GroupsAdapter extends RecyclerView.Adapter<GroupsAdapter.GroupsView
 
     @Override
     public void onBindViewHolder(GroupsViewHolder holder, int position) {
-        Group group = groups.get(position);
-        holder.hold(group, onClickListener);
+        holder.hold(groupItems.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return groups.size();
+        return groupItems.size();
     }
 
-    public static class GroupsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+    public void post(Runnable runnable) {
+        handler.post(runnable);
+    }
+
+    public void postDelayed(Runnable runnable, int millisec) {
+        handler.postDelayed(runnable, millisec);
+    }
+
+    @Override
+    public void onDestroy() {
+        app.bindConnectionService(service -> {
+            for (GroupItem groupItem : groupItems) {
+                service.getMessageReceiver().unsubscribe(groupItem);
+            }
+        });
+    }
+
+    public static class GroupItem extends AbstractMessageObserver
     {
-        private Callback<Group> onClickListener;
+        private GroupsAdapter adapter;
+
         private Group group;
+        private boolean isComposing;
+        private int position;
 
-        @BindView(R.id.groupCardView)
-        private CardView groupCardView;
-
-        @BindView(R.id.adminPhoto)
-        private ImageView adminPhotoView;
-
-        @BindView(R.id.adminName)
-        private TextView adminNameView;
-
-        @BindView(R.id.notice)
-        private TextView noticeView;
-
-        public GroupsViewHolder(View itemView) {
-            super(itemView);
-            ViewBinder.handle(this, itemView);
-            groupCardView.setOnClickListener(this);
+        public GroupItem(GroupsAdapter adapter, Group group) {
+            super(group.getGroupJid());
+            this.adapter = adapter;
+            this.group = group;
         }
 
-        public void hold(Group group, Callback<Group> listener) {
-            this.group = group;
-            this.onClickListener = listener;
-            this.adminNameView.setText(group.getAdmin().getDisplayName());
-            this.noticeView.setText(group.getNotice());
+        public ChatMessage getLastMessage() {
+            return adapter.app.getMessagesStorage().getLastMessage(getChatJid());
+        }
 
-            Glide.with(adminPhotoView.getContext())
-                    .load(group.getAdmin().getPhotoUrl())
-                    .centerCrop()
-                    .fitCenter()
-                    .into(adminPhotoView);
+        public boolean isComposing() {
+            return isComposing;
+        }
+
+        public void setPosition(int position) {
+            this.position = position;
+        }
+
+        public Group getGroup() {
+            return group;
         }
 
         @Override
-        public void onClick(View v) {
-            onClickListener.call(group);
+        public void messageReceived(ChatMessage message) throws InterruptedException {
+            adapter.post(() -> {
+                isComposing = false;
+                adapter.notifyItemChanged(position);
+            });
+        }
+
+        @Override
+        public void statusReceived(ChatState status, BareJid userJid) throws InterruptedException {
+            if (status == ChatState.composing && !isComposing) {
+                isComposing = true;
+                adapter.post(() -> adapter.notifyItemChanged(position));
+                adapter.postDelayed(() -> {
+                    isComposing = false;
+                    adapter.notifyItemChanged(position);
+                }, 6000);
+            }
         }
     }
 }

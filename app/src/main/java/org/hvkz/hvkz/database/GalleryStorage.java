@@ -1,7 +1,6 @@
 package org.hvkz.hvkz.database;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,25 +8,20 @@ import android.database.sqlite.SQLiteException;
 
 import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.firebase.entities.Photo;
-import org.hvkz.hvkz.uapi.models.entities.User;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
 
 public class GalleryStorage
 {
-    @Inject
-    User user;
-
+    private HVKZApp app;
     private SQLiteDatabase database;
     private GalleryDbHelper galleryDb;
-    private static GalleryStorage instance;
 
-    private GalleryStorage(Context c) {
-        HVKZApp.component().inject(this);
-        this.galleryDb = new GalleryDbHelper(c);
+    public GalleryStorage(HVKZApp app) {
+        this.app = app;
+        this.galleryDb = new GalleryDbHelper(app);
         this.database = galleryDb.getWritableDatabase();
         try { galleryDb.onCreate(database); }
         catch (SQLiteException ignored){}
@@ -35,7 +29,7 @@ public class GalleryStorage
 
     public void add(Photo photo) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(GalleryDbHelper.UID, user.getUserId());
+        contentValues.put(GalleryDbHelper.UID, app.getCurrentUser().getUserId());
         contentValues.put(GalleryDbHelper.URL, photo.getUrl());
         contentValues.put(GalleryDbHelper.DESCRIPTION, photo.getDescription());
         contentValues.put(GalleryDbHelper.PUBLISH_DATE, String.valueOf(photo.getDate()));
@@ -64,7 +58,7 @@ public class GalleryStorage
 
         Cursor cursor = database.rawQuery(
                 "SELECT * FROM " + GalleryDbHelper.TABLE_NAME +
-                        " WHERE " + GalleryDbHelper.UID + "=" + user.getUserId() +
+                        " WHERE " + GalleryDbHelper.UID + "=" + app.getCurrentUser().getUserId() +
                         " ORDER BY " + GalleryDbHelper.ID + " DESC" +
                         " LIMIT "+ offset +","+ limit, null
         );
@@ -91,11 +85,6 @@ public class GalleryStorage
     public boolean isEmpty() {
         long cnt  = DatabaseUtils.queryNumEntries(database, GalleryDbHelper.TABLE_NAME);
         return cnt == 0;
-    }
-
-    public static GalleryStorage getInstance() {
-        if (instance == null) instance = new GalleryStorage(HVKZApp.getAppContext());
-        return instance;
     }
 }
 

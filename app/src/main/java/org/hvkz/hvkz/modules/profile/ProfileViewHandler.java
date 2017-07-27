@@ -19,19 +19,20 @@ import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.annotations.OnClick;
 import org.hvkz.hvkz.database.GalleryStorage;
-import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
+import org.hvkz.hvkz.firebase.db.photos.PhotosStorage;
 import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.ViewHandler;
 import org.hvkz.hvkz.modules.profile.gallery.GalleryViewAdapter;
 import org.hvkz.hvkz.modules.profile.gallery.ItemDecorationAlbumColumns;
 import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.uapi.models.entities.UserData;
+import org.hvkz.hvkz.utils.ContextApp;
 
 import javax.inject.Inject;
 
 import static org.hvkz.hvkz.modules.MainActivity.GALLERY_REQUEST;
 
-public class ProfileViewHandler extends ViewHandler
+public class ProfileViewHandler extends ViewHandler<ProfilePresenter>
 {
     private static final String TAG = "ProfileViewHandler";
 
@@ -86,11 +87,12 @@ public class ProfileViewHandler extends ViewHandler
     @BindView(R.id.recyclerGalleryView)
     private RecyclerView recyclerView;
 
+    private PhotosStorage photosStorage;
     private GalleryStorage galleryStorage;
     private GalleryViewAdapter galleryViewAdapter;
     private boolean isLoading;
 
-    public ProfileViewHandler(BaseWindow baseWindow) {
+    public ProfileViewHandler(BaseWindow<ProfilePresenter> baseWindow) {
         super(baseWindow);
         if (galleryStorage.isEmpty()) refreshGallery();
         else loadMore();
@@ -98,8 +100,11 @@ public class ProfileViewHandler extends ViewHandler
 
     @Override
     protected void handle(Context context) {
-        HVKZApp.component().inject(this);
-        galleryStorage = GalleryStorage.getInstance();
+        HVKZApp hvkzApp = ContextApp.getApp(context);
+        hvkzApp.component().inject(this);
+
+        photosStorage = hvkzApp.getPhotosStorage();
+        galleryStorage = hvkzApp.getGalleryStorage();
 
         setupCard();
         setupGallery();
@@ -124,7 +129,7 @@ public class ProfileViewHandler extends ViewHandler
 
     public void refreshGallery() {
         Log.d(TAG, "Load from Firebase Storage.");
-        PhotosDb.getAll(photos -> {
+        photosStorage.getAll(photos -> {
             galleryStorage.clear();
             galleryViewAdapter.clear();
 
@@ -146,7 +151,7 @@ public class ProfileViewHandler extends ViewHandler
                 (view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
                     if(view.getChildAt(view.getChildCount() - 1) != null) {
                         if ((scrollY  >= (view.getChildAt(view.getChildCount() - 1).getMeasuredHeight()
-                                - ((Fragment) getWindow()).getView().getMeasuredHeight())) &&
+                                - window(Fragment.class).getView().getMeasuredHeight())) &&
                                 scrollY > oldScrollY)
                         {
                             if (!isLoading) loadMore();
@@ -185,9 +190,8 @@ public class ProfileViewHandler extends ViewHandler
 
         targetWeightValue.setText(userData.getField(UserData.DESIRED_WEIGHT));
 
-        Glide.with(context())
+        Glide.with(window(Fragment.class))
                 .load(user.getPhotoUrl())
-                .fitCenter()
                 .into(photo);
     }
 
@@ -195,6 +199,6 @@ public class ProfileViewHandler extends ViewHandler
     public void pickPhotoAction() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
-        getWindow().getActivity().startActivityForResult(photoPickerIntent, GALLERY_REQUEST);
+        activity().startActivityForResult(photoPickerIntent, GALLERY_REQUEST);
     }
 }

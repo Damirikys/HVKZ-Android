@@ -20,9 +20,6 @@ public class MessagesListView extends RecyclerView
     private MessagesListOnScrollListener onScrollListener;
     private MessagesListAdapter messagesListAdapter;
 
-    private final int LIMIT = 30;
-    private int OFFSET = LIMIT * (-1);
-
     private boolean isScrolling = false;
     private boolean addMessage = false;
 
@@ -38,31 +35,26 @@ public class MessagesListView extends RecyclerView
         super(context, attrs, defStyle);
     }
 
-    public void init(ChatDisposer disposer,
-                     DateChangeListener dateChangeListener,
-                     Callback<Void> keyboardCallback)
-    {
-        this.keyboardCallback = keyboardCallback;
-        this.dateChangeListener = dateChangeListener;
-        this.onScrollListener = new MessagesListOnScrollListener();
-        this.layoutManager = new LinearLayoutManager(this.getContext());
-        this.messagesListAdapter = new MessagesListAdapter(disposer);
-        this.messagesListAdapter.loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
+    public void setMessagesAdapter(MessagesListAdapter adapter) {
+        if (messagesListAdapter != null)
+            messagesListAdapter.onDestroy();
 
-        List<ChatMessage> firstPage = disposer.loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
-        if (!firstPage.isEmpty() && !firstPage.get(0).isMine()) {
-            messagesListAdapter.markAsRead();
-        }
-
-        this.setItemAnimator(new EmptyItemAnimator());
-        this.setLayoutManager(layoutManager);
-        this.setAdapter(messagesListAdapter);
-        this.addOnScrollListener(onScrollListener);
-        this.layoutManager.scrollToPosition(
+        this.setAdapter(messagesListAdapter = adapter);
+        this.setLayoutManager(layoutManager = new LinearLayoutManager(getContext()));
+        layoutManager.scrollToPosition(
                 (messagesListAdapter.getItemCount() != 0)
                         ? messagesListAdapter.getItemCount() - 1
                         : 0
         );
+    }
+
+    public void init(DateChangeListener dateChangeListener, Callback<Void> keyboardCallback) {
+        this.keyboardCallback = keyboardCallback;
+        this.dateChangeListener = dateChangeListener;
+        this.onScrollListener = new MessagesListOnScrollListener();
+
+        this.setItemAnimator(new EmptyItemAnimator());
+        this.addOnScrollListener(onScrollListener);
     }
 
     public void addNewMessage(ChatMessage message) {
@@ -152,7 +144,7 @@ public class MessagesListView extends RecyclerView
             if (!isLoading) {
                 if (firstVisibleItems == 0) {
                     isLoading = true;
-                    List<ChatMessage> newPage = messagesListAdapter.loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
+                    List<ChatMessage> newPage = messagesListAdapter.loadMore();
 
                     if (newPage.size() == 0) {
                         isEnd = true;

@@ -1,46 +1,41 @@
 package org.hvkz.hvkz.database;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.util.Log;
 
 import org.hvkz.hvkz.HVKZApp;
-import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.utils.serialize.JSONFactory;
 import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
 import org.hvkz.hvkz.xmpp.notification_service.NotificationService;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
-
 public class MessagesStorage extends AbstractMessageObserver
 {
     private static final String TAG = "MessagesStorage";
-    private static MessagesStorage instance;
 
-    @Inject
-    User user;
-
+    private HVKZApp app;
+    private NotificationService notificationService;
+    private MessagesDbHelper helper;
     private SQLiteDatabase database;
-    private MessagesDbHelper messagesDbHelper;
 
-    private MessagesStorage(Context c) {
+    public MessagesStorage(HVKZApp app) {
         super(null);
-        HVKZApp.component().inject(this);
-        this.messagesDbHelper = new MessagesDbHelper(c);
-        this.database = messagesDbHelper.getWritableDatabase();
-        try { messagesDbHelper.onCreate(database); }
+        this.app = app;
+        this.notificationService = app.getNotificationService();
+        this.helper = new MessagesDbHelper(app);
+        this.database = helper.getWritableDatabase();
+
+        try { helper.onCreate(database); }
         catch (SQLiteException ignored){}
     }
 
@@ -48,7 +43,7 @@ public class MessagesStorage extends AbstractMessageObserver
     public void messageReceived(ChatMessage message) {
         if (!messageExist(message)) {
             writeMessage(message);
-            NotificationService.getInstance().messageReceived(message);
+            notificationService.messageReceived(message);
         }
     }
 
@@ -66,44 +61,41 @@ public class MessagesStorage extends AbstractMessageObserver
                         " ORDER BY " + MessagesDbHelper.ID + " DESC", null
         );
 
+        ChatMessage message = null;
         if (cursor.moveToFirst()) {
             int jsonIndex = cursor.getColumnIndex(MessagesDbHelper.JSON);
             int readIndex = cursor.getColumnIndex(MessagesDbHelper.READ_MARK);
 
-            ChatMessage message = JSONFactory.fromJson(cursor.getString(jsonIndex), ChatMessage.class);
+            message = JSONFactory.fromJson(cursor.getString(jsonIndex), ChatMessage.class);
             message.setRead(cursor.getString(readIndex).equals("1"));
-
-            cursor.close();
-            return message;
-        } else {
-            cursor.close();
-            return null;
         }
+
+        cursor.close();
+        return message;
     }
 
     public boolean messageExist(ChatMessage message) {
-        String query = "Select * from " + MessagesDbHelper.TABLE_NAME + " where " +
-                MessagesDbHelper.JSON + " = '" + JSONFactory.toJson(message) + "'";
+        String selection = MessagesDbHelper.STANZA_ID + " == '" + message.getStanzaId() + "' AND "
+                + MessagesDbHelper.CHAT + " == '" + message.getChatJid().getLocalpart().intern() + "'";
 
-        Cursor cursor = database.rawQuery(query, null);
-        boolean result = cursor.getCount() > 0;
+        Cursor cursor = database.rawQuery(
+                "SELECT * FROM " + MessagesDbHelper.TABLE_NAME + " WHERE " + selection, null);
+
+        boolean result = cursor.moveToFirst();
         cursor.close();
+
         return result;
     }
 
-    public List<ChatMessage> getMessages(BareJid chat, int limit, int offset) {
+    public List<ChatMessage> getMessages(Jid chat, int limit, int offset) {
         return extractMessages(chat.getLocalpartOrThrow().intern(), limit, offset);
-    }
-
-    public List<ChatMessage> getMessages(String chat, int limit, int offset) {
-        return extractMessages(chat, limit, offset);
     }
 
     private List<ChatMessage> extractMessages(String chat, int limit, int offset) {
         List<ChatMessage> messages = new ArrayList<>();
 
         String selection = MessagesDbHelper.CHAT + " == '"+ chat +"' AND "
-                + MessagesDbHelper.UID + " == " + user.getUserId();
+                + MessagesDbHelper.UID + " == " + app.getCurrentUser().getUserId();
 
         Cursor cursor = database.rawQuery(
                 "SELECT * FROM " + MessagesDbHelper.TABLE_NAME +
@@ -130,10 +122,8 @@ public class MessagesStorage extends AbstractMessageObserver
     }
 
     public void writeMessage(ChatMessage message) {
-        Log.d(TAG, "writeMessage isRead " + message.isRead());
-
         ContentValues contentValues = new ContentValues();
-        contentValues.put(MessagesDbHelper.UID, user.getUserId());
+        contentValues.put(MessagesDbHelper.UID, app.getCurrentUser().getUserId());
         contentValues.put(MessagesDbHelper.CHAT, message.getChatJid().getLocalpart().intern());
         contentValues.put(MessagesDbHelper.JSON, JSONFactory.toJson(message));
         contentValues.put(MessagesDbHelper.STANZA_ID, message.getStanzaId());
@@ -145,24 +135,31 @@ public class MessagesStorage extends AbstractMessageObserver
     public void deleteMessages(Collection<ChatMessage> messageCollection) {
         database.beginTransaction();
         for(ChatMessage message: messageCollection) {
-            database.delete(MessagesDbHelper.TABLE_NAME, MessagesDbHelper.STANZA_ID + " = '" + message.getStanzaId() + "'", null);
+            deleteMessage(message);
         }
 
         database.setTransactionSuccessful();
         database.endTransaction();
     }
 
-    public void clearHistory(BareJid jid) {
-        database.delete(MessagesDbHelper.TABLE_NAME,
-                MessagesDbHelper.CHAT + " = '" + jid.getLocalpartOrThrow().intern() + "'", null);
+    public void deleteMessage(ChatMessage message) {
+        database.delete(MessagesDbHelper.TABLE_NAME, MessagesDbHelper.STANZA_ID + " = '" + message.getStanzaId() + "'", null);
     }
 
-    public void markAsRead(EntityBareJid chatJid) {
-        markAsRead(chatJid.getLocalpart().intern());
+    public void clearHistory(BareJid jid) {
+        clearHistory(jid.getLocalpartOrThrow().intern());
+    }
+
+    public void clearHistory(String localpart) {
+        database.delete(MessagesDbHelper.TABLE_NAME,
+                MessagesDbHelper.CHAT + " = '" + localpart + "'", null);
+    }
+
+    public void markAsRead(Jid chatJid) {
+        markAsRead(chatJid.getLocalpartOrThrow().intern());
     }
 
     public void markAsRead(String chat) {
-        Log.d(TAG, "markAsRead " + chat);
         ContentValues contentValues = new ContentValues();
         contentValues.put(MessagesDbHelper.READ_MARK, true);
 
@@ -170,8 +167,19 @@ public class MessagesStorage extends AbstractMessageObserver
                 MessagesDbHelper.READ_MARK + " == 0 AND " + MessagesDbHelper.CHAT + " == '" + chat + "'", null);
     }
 
-    public static MessagesStorage getInstance() {
-        if (instance == null) instance = new MessagesStorage(HVKZApp.getAppContext());
-        return instance;
+    public List<String> getExistedChats() {
+        String query = "Select distinct " + MessagesDbHelper.CHAT + " from " + MessagesDbHelper.TABLE_NAME;
+
+        Cursor cursor = database.rawQuery(query, null);
+        List<String> collection = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            int chatIndex = cursor.getColumnIndex(MessagesDbHelper.CHAT);
+            do {
+                collection.add(cursor.getString(chatIndex));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        return collection;
     }
 }

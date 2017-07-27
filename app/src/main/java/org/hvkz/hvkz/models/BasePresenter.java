@@ -1,5 +1,6 @@
 package org.hvkz.hvkz.models;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -8,22 +9,33 @@ import org.hvkz.hvkz.interfaces.IBasePresenter;
 import org.hvkz.hvkz.interfaces.ViewHandler;
 
 @SuppressWarnings("unchecked")
-public abstract class BasePresenter implements IBasePresenter
+public abstract class BasePresenter<T> implements IBasePresenter
 {
-    private ViewHandler viewHandler;
+    private ViewHandler<T> viewHandler;
 
-    public BasePresenter(BaseWindow activity) {
+    public BasePresenter(BaseWindow<T> activity) {
         this.viewHandler = createViewHandler(activity);
     }
 
-    protected abstract ViewHandler createViewHandler(BaseWindow activity);
+    @Override
+    public void init() {}
 
-    protected <T extends ViewHandler> T getViewHandler(Class<T> tClass) {
-        return (T) viewHandler;
+    protected abstract ViewHandler<T> createViewHandler(BaseWindow<T> activity);
+
+    public  <S extends ViewHandler<T>> S getViewHandler(Class<S> tClass) {
+        return (S) viewHandler;
     }
 
-    protected Context getContext() {
+    public  <S extends ViewHandler<T>> S getViewHandler() {
+        return (S) viewHandler;
+    }
+
+    protected Context context() {
         return viewHandler.context();
+    }
+
+    protected Activity activity() {
+        return viewHandler.activity();
     }
 
     @Override

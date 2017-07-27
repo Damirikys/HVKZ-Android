@@ -16,20 +16,19 @@ import com.karan.churi.PermissionManager.PermissionManager;
 
 import org.hvkz.hvkz.annotations.Layout;
 import org.hvkz.hvkz.interfaces.BaseWindow;
-import org.hvkz.hvkz.interfaces.Destroyable;
+import org.hvkz.hvkz.interfaces.IBasePresenter;
 import org.hvkz.hvkz.utils.controllers.PermissionController;
-import org.hvkz.hvkz.xmpp.LocalBinder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Layout
-public abstract class AppActivity<T extends Destroyable> extends AppCompatActivity implements BaseWindow
+public abstract class AppActivity<T extends IBasePresenter> extends AppCompatActivity implements BaseWindow<T>
 {
     private List<BroadcastReceiver> receivers = new ArrayList<>();
     private PermissionManager permissionManager;
     private ProgressDialog progressDialog;
-    private T presenter;
+    private IBasePresenter presenter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,6 +40,7 @@ public abstract class AppActivity<T extends Destroyable> extends AppCompatActivi
         progressDialog = new ProgressDialog(this);
         permissionManager = PermissionController.checkAndRequestPermission(this);
         presenter = createPresenter();
+        presenter.init();
     }
 
     @Override
@@ -48,18 +48,14 @@ public abstract class AppActivity<T extends Destroyable> extends AppCompatActivi
         permissionManager.checkResult(requestCode,permissions, grantResults);
     }
 
-    protected abstract T createPresenter();
-
-    public T getPresenter() {
-        if (presenter == null) {
-            presenter = createPresenter();
-        }
-
-        return presenter;
+    protected IBasePresenter  createPresenter() {
+        return new StubPresenter();
     }
 
-    public <S> LocalBinder<S> getLocalBinder(Class<S> tClass) {
-        return new LocalBinder<S>(null);
+    @SuppressWarnings("unchecked")
+    public T getPresenter() {
+        if (presenter == null) presenter = createPresenter();
+        return (T) presenter;
     }
 
     @Override
@@ -70,6 +66,12 @@ public abstract class AppActivity<T extends Destroyable> extends AppCompatActivi
     @Override
     public final Activity getActivity() {
         return this;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        presenter.onResultReceive(requestCode, resultCode, data);
     }
 
     @Override
@@ -116,5 +118,17 @@ public abstract class AppActivity<T extends Destroyable> extends AppCompatActivi
     public void onDestroy() {
         super.onDestroy();
         presenter.onDestroy();
+    }
+
+    private static final class StubPresenter implements IBasePresenter {
+
+        @Override
+        public void onDestroy() {}
+
+        @Override
+        public void init() {}
+
+        @Override
+        public void onResultReceive(int requestCode, int resultCode, Intent dataIntent) {}
     }
 }

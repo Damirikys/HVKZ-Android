@@ -1,17 +1,25 @@
 package org.hvkz.hvkz.modules.chats.window;
 
+import android.content.Context;
 import android.net.Uri;
 
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.database.MessagesStorage;
+import org.hvkz.hvkz.interfaces.Callback;
 import org.hvkz.hvkz.interfaces.Destroyable;
 import org.hvkz.hvkz.modules.chats.ChatType;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.xmpp.ConnectionService;
 import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.chatstates.ChatState;
+import org.jivesoftware.smackx.chatstates.packet.ChatStateExtension;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.util.ArrayList;
@@ -19,28 +27,93 @@ import java.util.List;
 
 public abstract class ChatDisposer extends AbstractMessageObserver implements Destroyable
 {
-    protected final EntityBareJid chatJid;
+    private final HVKZApp app;
+    private final ConnectionService service;
+
+    protected final Jid chatJid;
     protected final MessagesStorage storage;
+
     private List<AbstractMessageObserver> observers;
 
-    public ChatDisposer(EntityBareJid bareJid) {
-        super(bareJid);
-        this.chatJid = bareJid;
-        this.storage = MessagesStorage.getInstance();
+    public ChatDisposer(ConnectionService service, EntityBareJid jid) {
+        super(jid);
+        this.app = ContextApp.getApp(service);
+        this.service = service;
+        this.chatJid = jid;
+        this.storage = app.getMessagesStorage();
         this.observers = new ArrayList<>();
+
+        getService().getMessageReceiver().subscribe(this);
     }
 
-    public abstract void sendMessage(ChatMessage message) throws SmackException.NotConnectedException, InterruptedException;
+    public final void sendMessage(ChatMessage message) throws SmackException.NotConnectedException, InterruptedException {
+        if (getService().getConnection().isAuthenticated()) {
+            getService().getConnection().sendStanza(message.setChatJid(chatJid).buildPacket(getMessageType()));
+        } else {
+            throw new SmackException.NotConnectedException();
+        }
+    }
 
-    public abstract void sendComposingStatus();
+    public void sendComposingStatus() {
+        try {
+            Message statusPacket = new Message();
+            statusPacket.setBody(null);
+            statusPacket.setType(getMessageType());
+            statusPacket.setTo(chatJid);
+            statusPacket.setFrom(getService().getConnection().getUser());
+            ChatStateExtension extension = new ChatStateExtension(ChatState.composing);
+            statusPacket.addExtension(extension);
+            getService().getConnection().sendStanza(statusPacket);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-    public abstract void sendActiveStatus();
+    public void sendActiveStatus() {
+        try {
+            Message statusPacket = new Message();
+            statusPacket.setBody(null);
+            statusPacket.setType(getMessageType());
+            statusPacket.setTo(chatJid);
+            statusPacket.setFrom(getService().getConnection().getUser());
+            ChatStateExtension extension = new ChatStateExtension(ChatState.active);
+            statusPacket.addExtension(extension);
+            getService().getConnection().sendStanza(statusPacket);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendInactiveStatus() {
+        try {
+            Message statusPacket = new Message();
+            statusPacket.setBody(null);
+            statusPacket.setType(getMessageType());
+            statusPacket.setTo(chatJid);
+            statusPacket.setFrom(getService().getConnection().getUser());
+            ChatStateExtension extension = new ChatStateExtension(ChatState.inactive);
+            statusPacket.addExtension(extension);
+            getService().getConnection().sendStanza(statusPacket);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onToolbarClick(Context context) {}
+
+    public abstract Message.Type getMessageType();
 
     public abstract String getTitle();
 
-    public abstract String getStatus();
+    public abstract String getDefaultStatus();
+
+    public abstract String getActiveStatus();
 
     public abstract Uri getPhotoUri();
+
+    protected ConnectionService getService() {
+        return service;
+    }
 
     @Override
     public void messageReceived(ChatMessage message) throws InterruptedException {
@@ -53,6 +126,13 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
     public void statusReceived(ChatState status, BareJid userJid) throws InterruptedException {
         for (AbstractMessageObserver observer : observers) {
             observer.statusReceived(status, userJid);
+        }
+    }
+
+    @Override
+    public void presenceReceived(Presence.Type type) {
+        for (AbstractMessageObserver observer : observers) {
+            observer.presenceReceived(type);
         }
     }
 
@@ -76,21 +156,34 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
         storage.deleteMessages(messages);
     }
 
-    @Override
-    public void onDestroy() {
-        observers.clear();
-        observers = null;
+    public void remove(ChatMessage message) {
+        storage.deleteMessage(message);
     }
 
-    public static ChatDisposer obtain(ConnectionService service, ChatType chatType, String domain)
-            throws XmppStringprepException {
-        switch (chatType) {
-            case MULTI_USER_CHAT:
-                return new GroupChatDisposer(service, domain);
-            case PERSONAL_CHAT:
-                return new PersonalChatDisposer(service, domain);
-            default:
-                return null;
-        }
+    @Override
+    public void onDestroy() {
+        getService().getMessageReceiver().unsubscribe(this);
+        observers.clear();
+    }
+
+    public static void obtain(Callback<ChatDisposer> disposerCallback, Context context, ChatType chatType, String domain) {
+        HVKZApp app = ContextApp.getApp(context);
+        app.bindConnectionService(service -> {
+            switch (chatType) {
+                case MULTI_USER_CHAT:
+                    app.getGroupsStorage().getGroupByName(domain, group ->
+                            disposerCallback.call(new GroupChatDisposer(service, group)));
+                    break;
+                case PERSONAL_CHAT:
+                    app.getUsersStorage().getByIdFromCache(Integer.valueOf(domain), user -> {
+                        try {
+                            disposerCallback.call(new PersonalChatDisposer(service, user));
+                        } catch (XmppStringprepException e) {
+                            disposerCallback.call(null);
+                        }
+                    });
+                    break;
+            }
+        });
     }
 }

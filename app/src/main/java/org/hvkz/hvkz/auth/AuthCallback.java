@@ -1,8 +1,6 @@
 package org.hvkz.hvkz.auth;
 
-import org.hvkz.hvkz.interfaces.ActivityWrapper;
-
-public interface AuthCallback extends ActivityWrapper
+public interface AuthCallback
 {
     void onAuthenticateFailed(String desc);
 

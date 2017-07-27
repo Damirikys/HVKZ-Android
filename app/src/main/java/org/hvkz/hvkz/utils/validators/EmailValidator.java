@@ -8,6 +8,6 @@ public class EmailValidator
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
     public static boolean emailAddressIsCorrect(String address) {
-        return VALID_EMAIL_ADDRESS_REGEX.matcher(address).find();
+        return !address.isEmpty() && VALID_EMAIL_ADDRESS_REGEX.matcher(address).find();
     }
 }

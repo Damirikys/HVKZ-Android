@@ -1,11 +1,12 @@
 package org.hvkz.hvkz.utils;
 
 import android.util.DisplayMetrics;
+import android.util.SparseArray;
 
-import org.hvkz.hvkz.HVKZApp;
-
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 public class Tools
 {
@@ -63,15 +64,12 @@ public class Tools
                 : calendar.get(Calendar.MINUTE));
     }
 
-    public static int dpToPx(int dp) {
-        DisplayMetrics displayMetrics = HVKZApp.getAppContext().getResources().getDisplayMetrics();
-        return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
+    public static int dpToPx(DisplayMetrics metrics, int dp) {
+        return Math.round(dp * (metrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
-    public static int pxToDp(int px)
-    {
-        DisplayMetrics displayMetrics = HVKZApp.getAppContext().getResources().getDisplayMetrics();
-        return Math.round(px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
+    public static int pxToDp(DisplayMetrics metrics, int px) {
+        return Math.round(px / (metrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
     /**
@@ -102,5 +100,13 @@ public class Tools
             return ed + b;
         }
         return ed + c;
+    }
+
+    public static <C> List<C> asList(SparseArray<C> sparseArray) {
+        if (sparseArray == null) return null;
+        List<C> arrayList = new ArrayList<>(sparseArray.size());
+        for (int i = 0; i < sparseArray.size(); i++)
+            arrayList.add(sparseArray.valueAt(i));
+        return arrayList;
     }
 }

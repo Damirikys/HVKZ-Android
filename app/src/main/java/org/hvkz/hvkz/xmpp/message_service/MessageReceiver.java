@@ -1,14 +1,15 @@
 package org.hvkz.hvkz.xmpp.message_service;
 
+import android.content.Context;
 import android.util.Log;
 
-import org.hvkz.hvkz.database.MessagesStorage;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.xmpp.message_service.packet_listeners.AbstractMessageListener;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
-import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.chatstates.ChatState;
-import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,11 +19,11 @@ public class MessageReceiver extends AbstractMessageListener
     private Set<AbstractMessageObserver> observers;
     private Set<MessageObserver> permanentObservers;
 
-    private MessageReceiver(XMPPConnection connection) {
-        super(connection);
+    private MessageReceiver(Context context, EntityFullJid userJid) {
+        super(userJid);
         this.observers = new HashSet<>();
         this.permanentObservers = new HashSet<MessageObserver>() {{
-            add(MessagesStorage.getInstance());
+            add(ContextApp.getApp(context).getMessagesStorage());
         }};
     }
 
@@ -58,7 +59,7 @@ public class MessageReceiver extends AbstractMessageListener
     }
 
     @Override
-    public void provideStatus(ChatState status, EntityBareJid chatJid, BareJid userJid) {
+    public void provideStatus(ChatState status, EntityBareJid chatJid, EntityBareJid userJid) {
         for (AbstractMessageObserver observer: observers) {
             if (!observer.getChatJid().equals(chatJid))
                 continue;
@@ -68,7 +69,17 @@ public class MessageReceiver extends AbstractMessageListener
         }
     }
 
-    public static MessageReceiver instanceOf(XMPPConnection connection) {
-        return new MessageReceiver(connection);
+    @Override
+    public void presenceChanged(Presence presence) {
+        EntityBareJid bareJid = presence.getFrom().asEntityBareJidIfPossible();
+        for (AbstractMessageObserver observer : observers) {
+            if (observer.getChatJid().equals(bareJid)) {
+                observer.presenceReceived(presence.getType());
+            }
+        }
+    }
+
+    public static MessageReceiver instanceOf(Context context, EntityFullJid userJid) {
+        return new MessageReceiver(context, userJid);
     }
 }

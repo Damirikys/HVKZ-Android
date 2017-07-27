@@ -3,122 +3,85 @@
                                    xmlns:tools="http://schemas.android.com/tools"
                                    android:id="@+id/toolbar"
                                    android:layout_width="match_parent"
-                                   android:layout_height="50dp"
-                                   app:titleTextColor="#ffffff"
+                                   android:layout_height="wrap_content"
                                    android:elevation="2dp"
-                                   android:background="@color/colorPrimary"
+                                   android:background="@color/colorPrimaryDark"
+                                   app:titleTextColor="#ffffff"
+                                   app:titleTextAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                                   app:title="Full name"
+                                   app:subtitle="online"
+                                   app:subtitleTextColor="#eaeaea"
                                    tools:ignore="UnusedAttribute">
 
     <RelativeLayout
+        android:id="@+id/toolbar_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/photo_toolbar"
+            android:layout_alignParentRight="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="@dimen/six"
+            android:src="@mipmap/noavatar"
+            app:border_width="0dp"
+            app:border_color="#00ffffff"/>
+
+        <View
+            android:id="@+id/status_online"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_margin="1dp"
+            android:layout_alignBottom="@id/photo_toolbar"
+            android:layout_alignLeft="@id/photo_toolbar"
+            android:background="@drawable/offline"/>
 
         <LinearLayout
-            android:id="@+id/toolbartape"
-            android:orientation="horizontal"
-            android:visibility="visible"
-            android:padding="5dp"
+            android:orientation="vertical"
+            android:layout_centerVertical="true"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/buddy_avatar"
-                android:src="@mipmap/noavatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="@dimen/six"
-                app:border_color="#00ffffff" />
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:padding="2dp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Name"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#ffffff"
-                    android:id="@+id/buddy_name" />
-
-                <TextView
-                    android:layout_marginTop="-3dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="не в диалоге"
-                    android:textColor="#b48f2a"
-                    android:id="@+id/buddy_status" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-
-        <LinearLayout
-            android:id="@+id/selectedMode"
-            android:visibility="invisible"
-            android:padding="4dp"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:layout_marginRight="60dp">
 
             <TextView
-                android:gravity="center_vertical"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:textColor="#fff"
-                android:textSize="20sp"
-                android:text="Выбрано: "/>
-
-            <TextView
-                android:id="@+id/selectedNum"
-                android:gravity="center_vertical"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:textColor="#fff"
-                android:textSize="20sp"
-                android:text="0"/>
-
-            <LinearLayout
-                android:gravity="right"
+                android:id="@+id/title_toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:text="Шайхисламов Дамир Арманович Лолкек чебурек я человек"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:scrollHorizontally="true"
+                android:textColor="@color/colorWhite"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
 
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
 
-                <RelativeLayout
-                    android:padding="10dp"
-                    android:onClick="reSendMessages"
-                    android:background="@drawable/ripple_effect"
-                    android:clickable="true"
-                    android:layout_gravity="center_vertical"
+                <TextView
+                    android:id="@+id/subtitle_toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="онлайн"
+                    android:textColor="#eaeaea"/>
+
+                <com.bhargavms.dotloader.DotLoader
+                    android:id="@+id/typing_indicator"
+                    android:visibility="invisible"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@mipmap/resend"/>
-
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:padding="10dp"
-                    android:onClick="deleteMessages"
-                    android:background="@drawable/ripple_effect"
-                    android:clickable="true"
-                    android:layout_gravity="center_vertical"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@mipmap/delete"/>
-
-                </RelativeLayout>
+                    android:layout_height="10dp"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginStart="@dimen/six"
+                    android:layout_marginLeft="@dimen/six"
+                    app:color_array="@array/dot_colors"
+                    app:dot_radius="3dp"
+                    app:number_of_dots="3"/>
 
             </LinearLayout>
 

@@ -10,13 +10,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.database.GalleryStorage;
-import org.hvkz.hvkz.firebase.db.photos.PhotosDb;
+import org.hvkz.hvkz.firebase.db.photos.PhotosStorage;
 import org.hvkz.hvkz.firebase.entities.Photo;
 import org.hvkz.hvkz.firebase.storage.PhotoUploader;
 import org.hvkz.hvkz.modules.gallery.ImagesProvider;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.ExecuteCallbackAdapter;
 
 import java.util.ArrayList;
@@ -24,11 +26,15 @@ import java.util.List;
 
 public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.GalleryViewHolder>
 {
+    private PhotosStorage photosStorage;
+    private GalleryStorage galleryStorage;
     private List<Photo> items;
     private Context context;
 
     public GalleryViewAdapter(Context context) {
         this.context = context;
+        this.photosStorage = ContextApp.getApp(context).getPhotosStorage();
+        this.galleryStorage = ContextApp.getApp(context).getGalleryStorage();
         this.items = new ArrayList<>();
     }
 
@@ -63,8 +69,9 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
     public void onBindViewHolder(GalleryViewHolder holder, int position) {
         Glide.with(context)
                 .load(items.get(position).getUrl())
-                .centerCrop()
                 .placeholder(R.drawable.imgplaceholder)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .centerCrop()
                 .into(holder.photo_item);
     }
 
@@ -101,9 +108,9 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
                             .callback(new ExecuteCallbackAdapter<Photo>() {
                                 @Override
                                 public void onRemoved() {
-                                    PhotosDb.remove(photo, result -> {
+                                    photosStorage.remove(photo, result -> {
                                         if (result) {
-                                            GalleryStorage.getInstance().remove(photo);
+                                            galleryStorage.remove(photo);
                                             items.remove(getAdapterPosition());
                                             notifyItemRemoved(getAdapterPosition());
                                         } else {

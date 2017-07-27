@@ -3,17 +3,24 @@ package org.hvkz.hvkz.xmpp;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
 public class BootBroadcast extends BroadcastReceiver
 {
+    public static final String BROADCAST_KEY = BootBroadcast.class.getName();
+
     @Override
     public void onReceive(Context context, Intent intent) {
-        Toast.makeText(context, "ACTION_BOOT_COMPLETED", Toast.LENGTH_LONG).show();
-        startLogin(context);
-    }
+        final String action = intent.getAction();
 
-    public void startLogin(Context context) {
-        context.startService(new Intent(context, ConnectionService.class));
+        switch (action) {
+            case Intent.ACTION_BOOT_COMPLETED:
+                context.startService(new Intent(context, ConnectionService.class));
+                break;
+            default:
+                Intent i = new Intent(context, ConnectionService.class);
+                i.putExtra(BROADCAST_KEY, true);
+                context.startService(i);
+                break;
+        }
     }
 }

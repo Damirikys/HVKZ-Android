@@ -1,42 +1,60 @@
 package org.hvkz.hvkz.modules.chats.window;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayout;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.BindView;
-import org.hvkz.hvkz.firebase.db.users.UsersDb;
+import org.hvkz.hvkz.annotations.OnClick;
+import org.hvkz.hvkz.annotations.OnLongClick;
+import org.hvkz.hvkz.firebase.db.users.UsersStorage;
+import org.hvkz.hvkz.interfaces.Callback;
 import org.hvkz.hvkz.models.ViewBinder;
 import org.hvkz.hvkz.modules.RouteChannel;
 import org.hvkz.hvkz.modules.chats.ChatType;
 import org.hvkz.hvkz.modules.gallery.ImagesProvider;
+import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.Tools;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
 
 import java.util.List;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 import static org.hvkz.hvkz.modules.chats.ChatRouter.CHAT_TYPE_KEY;
 import static org.hvkz.hvkz.modules.chats.ChatRouter.DOMAIN_KEY;
 import static org.hvkz.hvkz.utils.Tools.dpToPx;
 
-public class MessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener
+public class MessageViewHolder extends RecyclerView.ViewHolder
 {
-    private static final int IMG_SIZE = dpToPx(300);
-    private static final int IMG_MARGIN = dpToPx(2);
+    private static Integer IMG_SIZE;
+    private static Integer IMG_MARGIN;
     private static final int MINE_COLOR = Color.parseColor("#fffcd7");
     private static final int SELECTED_COLOR = Color.LTGRAY;
 
+    private MessagesListAdapter adapter;
+    private PopupMenu popupMenu;
+    private UsersStorage usersStorage;
     private MessagesSelector selector;
     private ChatMessage message;
 
@@ -64,14 +82,23 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
     @BindView(R.id.chatHideTime)
     private TextView timeView;
 
-    public MessageViewHolder(View itemView, MessagesSelector selector) {
+    public MessageViewHolder(View itemView, MessagesSelector selector, MessagesListAdapter adapter) {
         super(itemView);
-        this.selector = selector;
         ViewBinder.handle(this, itemView);
+
+        if (IMG_SIZE == null) {
+            IMG_SIZE = dpToPx(itemView.getResources().getDisplayMetrics(), 300);
+            IMG_MARGIN = dpToPx(itemView.getResources().getDisplayMetrics(), 2);
+        }
+
+        this.adapter = adapter;
+        this.popupMenu = new PopupMenu(context(), itemView);
+        this.usersStorage = ContextApp.getApp(itemView.getContext()).getUsersStorage();
+        this.selector = selector;
     }
 
     public boolean isMine() {
-        return message.isMine();
+        return message.isMine(messageTape.getContext());
     }
 
     public void bindMessage(ChatMessage _message) {
@@ -81,8 +108,6 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
         messageText.setText(message.getBody());
         timeView.setText(Tools.getTimeFromUnix(message.getTimestamp()));
         messageTape.setBackgroundColor(Color.argb(0, 0, 0, 0));
-        messageTape.setOnLongClickListener(this);
-        messageTape.setOnClickListener(this);
 
         layoutImages();
         layoutForwardedMessages();
@@ -154,7 +179,7 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
                 date.setText(Tools.getDateStamp(fm.getTimestamp()));
                 body.setText(fm.getMessage());
 
-                UsersDb.getById(fm.getSender(), user -> {
+                usersStorage.getByIdFromCache(fm.getSender(), user -> {
                     name.setText(user.getShortName());
 
                     Glide.with(forwardedView.getContext())
@@ -174,6 +199,7 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
     }
 
     public void setupMineDisplay(boolean beforeIsMine) {
+        popupMenu.setGravity(Gravity.RIGHT);
         bubbleContainer.setGravity(Gravity.END);
         photo.setVisibility(View.INVISIBLE);
         timeView.setVisibility(View.VISIBLE);
@@ -183,21 +209,14 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
     }
 
     public void setupNotMineDisplay(ChatMessage beforeMessage) {
+        popupMenu.setGravity(Gravity.LEFT);
         timeView.setVisibility(View.INVISIBLE);
         bubbleContainer.setGravity(Gravity.START);
 
         if (beforeMessage == null || beforeMessage.getSenderId() != message.getSenderId()) {
             photo.setVisibility(View.VISIBLE);
-            photo.setOnClickListener(v -> {
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(CHAT_TYPE_KEY, ChatType.PERSONAL_CHAT);
-                bundle.putString(DOMAIN_KEY, String.valueOf(message.getSenderId()));
-                RouteChannel.sendRouteRequest(new RouteChannel.RouteRequest(bundle));
-            });
-
-            UsersDb.getById(message.getSenderId(), user -> Glide.with(photo.getContext())
+                   usersStorage.getByIdFromCache(message.getSenderId(), user -> Glide.with(photo.getContext())
                     .load(user.getPhotoUrl())
-                    .fitCenter()
                     .centerCrop()
                     .into(photo));
         } else {
@@ -206,24 +225,119 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements View.O
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        selector.onMessageClick(message, wasAdded -> {
-            if (wasAdded) {
-                bubbleLayout.setCardBackgroundColor(SELECTED_COLOR);
-            } else {
-                bubbleLayout.setCardBackgroundColor((isMine()) ? MINE_COLOR : Color.WHITE);
-            }
-        });
+    public Context context() {
+        return messageTape.getContext();
     }
 
-    @Override
-    public boolean onLongClick(View v) {
+    @OnClick(R.id.chatAvatar)
+    public void onUserCardOpen(View view) {
+        usersStorage.getByIdFromCache(message.getSenderId(),
+                user -> {
+                    final AlertDialog dialog = new AlertDialog.Builder(context(), R.style.MyDialogTheme)
+                            .setCancelable(true)
+                            .create();
+
+                    dialog.setView(CardWrapper.inflate(context(), user, avoid -> dialog.dismiss()));
+                    dialog.show();
+                });
+    }
+
+    @OnClick(R.id.message_tape)
+    public void onMessageClick(View view) {
+        if (!selector.isEnable()) {
+            Menu menu = popupMenu.getMenu();
+            menu.clear();
+
+            MenuItem copyItem = menu.add("Копировать");
+            copyItem.setOnMenuItemClickListener(item -> {
+                ClipboardManager manager = (ClipboardManager) context().getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("", message.getBody());
+                manager.setPrimaryClip(clip);
+
+                Toast.makeText(context(), "Скопировано", Toast.LENGTH_SHORT).show();
+                return false;
+            });
+
+            MenuItem deleteItem = menu.add("Удалить");
+            deleteItem.setOnMenuItemClickListener(item -> {
+                adapter.remove(message);
+                return false;
+            });
+
+            popupMenu.show();
+        } else {
+            selector.onMessageClick(message, wasAdded -> {
+                if (wasAdded) {
+                    bubbleLayout.setCardBackgroundColor(SELECTED_COLOR);
+                } else {
+                    bubbleLayout.setCardBackgroundColor((isMine()) ? MINE_COLOR : Color.WHITE);
+                }
+            });
+        }
+    }
+
+    @OnLongClick(R.id.message_tape)
+    public boolean onMessageLongClick(View view) {
         if (!message.getBody().isEmpty()) {
             selector.setSelectorEnable(true);
-            onClick(v);
+            onMessageClick(view);
         }
 
         return true;
+    }
+
+    private static class CardWrapper
+    {
+        private View view;
+        private User user;
+        private Callback<Void> dismiss;
+
+        @BindView(R.id.photo)
+        private CircleImageView photoView;
+
+        @BindView(R.id.full_name)
+        private TextView nameView;
+
+        @BindView(R.id.email)
+        private TextView emailView;
+
+        private CardWrapper(View view, User user, Callback<Void> callback) {
+            this.view = view;
+            this.user = user;
+            this.dismiss = callback;
+            ViewBinder.handle(this, view);
+
+            this.nameView.setText(user.getDisplayName());
+            this.emailView.setText(user.getEmail());
+
+            Glide.with(view.getContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(photoView);
+        }
+
+        private View getView() {
+            return view;
+        }
+
+        @OnClick(R.id.sendMessageButton)
+        public void onSendMessageClick(View view) {
+            String localpart = String.valueOf(user.getUserId());
+
+            if (!ContextApp.getApp(view.getContext()).getNotificationService().isLocked(localpart)) {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(CHAT_TYPE_KEY, ChatType.PERSONAL_CHAT);
+                bundle.putString(DOMAIN_KEY, String.valueOf(user.getUserId()));
+                RouteChannel.sendRouteRequest(new RouteChannel.RouteRequest(bundle));
+            }
+
+            dismiss.call(null);
+        }
+
+        private static View inflate(Context context, User user, Callback<Void> dismiss) {
+            return new CardWrapper(LayoutInflater.from(context)
+                    .inflate(R.layout.user_card_layout, null), user, dismiss)
+                    .getView();
+        }
     }
 }

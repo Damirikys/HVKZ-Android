@@ -20,6 +20,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bhargavms.dotloader.DotLoader;
 import com.bumptech.glide.Glide;
 import com.eralp.circleprogressview.CircleProgressView;
 
@@ -36,6 +37,10 @@ import org.hvkz.hvkz.utils.Animations;
 import org.hvkz.hvkz.utils.Tools;
 import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
 import org.hvkz.hvkz.xmpp.models.ChatMessage;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
@@ -43,18 +48,26 @@ import org.jxmpp.jid.EntityBareJid;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 import static org.hvkz.hvkz.modules.chats.window.ChatWindowFragment.GALLERY_REQUEST;
 
-public class ChatWindowViewHandler extends ViewHandler implements DateChangeListener, MessagesSelector.OnSelectMessageListener
+public class ChatWindowViewHandler extends ViewHandler<ChatWindowPresenter> implements DateChangeListener, MessagesSelector.OnSelectMessageListener
 {
-    @BindView(R.id.buddy_avatar)
-    private ImageView photoView;
+    @BindView(R.id.photo_toolbar)
+    private CircleImageView photoView;
 
-    @BindView(R.id.buddy_name)
+    @BindView(R.id.status_online)
+    private View statusOnline;
+
+    @BindView(R.id.title_toolbar)
     private TextView titleView;
 
-    @BindView(R.id.buddy_status)
+    @BindView(R.id.subtitle_toolbar)
     private TextView statusView;
+
+    @BindView(R.id.typing_indicator)
+    private DotLoader typingIndicator;
 
     @BindView(R.id.attachments)
     private HorizontalScrollView attachmentsView;
@@ -80,13 +93,14 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
     private Handler handler;
     private ChatWindow chatWindow;
     private ChatDisposer disposer;
+    private ComposeInteractor composeInteractor;
     private List<ChatMessage.Forwarded> forwardedMessages;
 
     private PhotoAttachmentsExecutor photoAttachmentsExecutor;
     private long timestamp;
     private boolean keyboardIsOpen;
 
-    public ChatWindowViewHandler(ChatWindow chatWindow, BaseWindow baseWindow) {
+    public ChatWindowViewHandler(ChatWindow chatWindow, BaseWindow<ChatWindowPresenter> baseWindow) {
         super(baseWindow);
         this.chatWindow = chatWindow;
         this.forwardedMessages = new ArrayList<>();
@@ -98,34 +112,64 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
     protected void handle(Context context) {}
 
     public void init(ChatDisposer chatDisposer) {
-        this.disposer = chatDisposer;
+        if (disposer == null) {
+            chatDisposer.sendActiveStatus();
 
-        messagesListView.init(disposer, this, aVoid -> {
-            if (!keyboardIsOpen) return;
-            InputMethodManager imm = (InputMethodManager) context().getSystemService(Activity.INPUT_METHOD_SERVICE);
-            View view = getWindow().getActivity().getCurrentFocus();
-            if (view == null) view = new View(context());
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        });
+            messagesListView.init(this, aVoid -> {
+                if (!keyboardIsOpen) return;
+                InputMethodManager imm = (InputMethodManager) context().getSystemService(Activity.INPUT_METHOD_SERVICE);
+                View view = activity().getCurrentFocus();
+                if (view == null) view = new View(context());
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            });
 
-        messagesListView.getAdapter().setOnSelectMessageListener(this);
 
-        KeyboardVisibilityEvent.setEventListener(getWindow().getActivity(), isOpen -> {
-            keyboardIsOpen = !keyboardIsOpen;
-            messagesListView.scrollToBottom();
-        });
+            messageEditText.addTextChangedListener((composeInteractor == null)
+                    ? composeInteractor = new ComposeInteractor()
+                    : composeInteractor
+            );
 
+            KeyboardVisibilityEvent.setEventListener(activity(), isOpen -> {
+                keyboardIsOpen = !keyboardIsOpen;
+                messagesListView.scrollToBottom();
+            });
+        }
+
+        disposer = chatDisposer;
+        disposer.attachMessageObserver(new MessagesExtractor(null));
+
+        Roster roster = disposer.getService().getRoster();
+        RosterEntry rosterEntry = roster.getEntry(chatDisposer.chatJid.asBareJid());
+        if (rosterEntry == null || !rosterEntry.canSeeHisPresence()) {
+            try {
+                roster.sendSubscriptionRequest(chatDisposer.chatJid.asBareJid());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (disposer.getMessageType() == Message.Type.chat) {
+            if (roster.getPresence(chatDisposer.chatJid.asBareJid()).isAvailable()) {
+                statusOnline.setBackgroundResource(R.drawable.online);
+            } else {
+                statusOnline.setBackgroundResource(R.drawable.offline);
+            }
+        } else {
+            statusOnline.setVisibility(View.GONE);
+        }
+
+        statusView.setText(chatDisposer.getDefaultStatus());
         titleView.setText(disposer.getTitle());
-        statusView.setText(disposer.getStatus());
-        messageEditText.addTextChangedListener(new ComposeInteractor());
+        titleView.postDelayed(() -> {
+            if (!titleView.isSelected()) {
+                titleView.setSelected(true);
+            }
+        }, 3000);
 
         Glide.with(context())
                 .load(disposer.getPhotoUri())
                 .centerCrop()
                 .into(photoView);
-
-        disposer.attachMessageObserver(new MessagesExtractor(null));
-        disposer.sendActiveStatus();
     }
 
     public void setAttachmentsVisible(boolean bool) {
@@ -200,7 +244,7 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
     }
 
     @OnClick(R.id.sendMessageLayout)
-    public void sendMessage() {
+    public void onSendButtonClick(View view) {
         String message = messageEditText.getText().toString().trim();
         if (!message.isEmpty() || photoAttachmentsExecutor.getAttachedPhotos().size() > 0 || forwardedMessages.size() > 0) {
             chatWindow.sendMessage(message);
@@ -208,10 +252,15 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
     }
 
     @OnClick(R.id.pickPhotoLayout)
-    public void pickPhoto() {
+    public void onPhotoAttachClick(View view) {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
         activity().startActivityForResult(photoPickerIntent, GALLERY_REQUEST);
+    }
+
+    @OnClick(R.id.toolbar_layout)
+    public void onToolbarClick(View view) {
+        disposer.onToolbarClick(context());
     }
 
     @Override
@@ -244,12 +293,12 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
         handler.post(() -> {
             if (bool) {
                 if (dateTimeView.getVisibility() == View.INVISIBLE) {
-                    dateTimeView.startAnimation(Animations.slideUp());
+                    dateTimeView.startAnimation(Animations.slideUp(context()));
                     dateTimeView.setVisibility(View.VISIBLE);
                 }
             } else {
                 if (dateTimeView.getVisibility() == View.VISIBLE) {
-                    dateTimeView.startAnimation(Animations.slideDown());
+                    dateTimeView.startAnimation(Animations.slideDown(context()));
                     dateTimeView.setVisibility(View.INVISIBLE);
                 }
             }
@@ -259,6 +308,8 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
     @Override
     public void onDestroy() {
         super.onDestroy();
+        disposer.sendInactiveStatus();
+        disposer.onDestroy();
         messagesListView.onDestroy();
         photoAttachmentsExecutor.onDestroy();
         photoAttachmentsExecutor = null;
@@ -275,7 +326,8 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
         public void messageReceived(ChatMessage message) throws InterruptedException {
             handler.post(() -> {
                 messagesListView.addReceivedMessage(message);
-                statusView.setText(disposer.getStatus());
+                statusView.setText(disposer.getActiveStatus());
+                typingIndicator.setVisibility(View.INVISIBLE);
             });
         }
 
@@ -283,11 +335,33 @@ public class ChatWindowViewHandler extends ViewHandler implements DateChangeList
         public void statusReceived(ChatState status, BareJid userJid) throws InterruptedException {
             handler.post(() -> {
                 messagesListView.getAdapter().markAsRead();
-
                 switch (status) {
+                    case active:
+                        statusView.setText(disposer.getActiveStatus());
+                        break;
+                    case inactive:
+                        statusView.setText(disposer.getDefaultStatus());
+                        break;
                     case composing:
-                        statusView.setText("печатают...");
-                        handler.postDelayed(() -> statusView.setText(disposer.getStatus()), 6000);
+                        statusView.setText(disposer.getActiveStatus());
+                        typingIndicator.setVisibility(View.VISIBLE);
+                        handler.postDelayed(() -> typingIndicator.setVisibility(View.INVISIBLE), 6000);
+                        break;
+                }
+            });
+        }
+
+        @Override
+        public void presenceReceived(Presence.Type type) {
+            handler.post(() -> {
+                switch (type) {
+                    case available:
+                        statusView.setText("в сети");
+                        statusOnline.setBackgroundResource(R.drawable.online);
+                        break;
+                    case unavailable:
+                        statusView.setText("не в сети");
+                        statusOnline.setBackgroundResource(R.drawable.offline);
                         break;
                 }
             });

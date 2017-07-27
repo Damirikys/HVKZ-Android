@@ -25,7 +25,12 @@ public final class RouteChannel
         routers.remove(router);
     }
 
-    public static class RouteRequest {
+    public static void clear() {
+        routers.clear();
+    }
+
+    public static class RouteRequest
+    {
         private Bundle args;
 
         public RouteRequest(Bundle args) {

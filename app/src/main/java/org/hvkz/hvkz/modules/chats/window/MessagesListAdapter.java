@@ -1,7 +1,7 @@
 package org.hvkz.hvkz.modules.chats.window;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,14 +15,22 @@ import java.util.List;
 
 public class MessagesListAdapter extends RecyclerView.Adapter<MessageViewHolder> implements Destroyable
 {
+    private final int LIMIT = 30;
+    private int OFFSET = LIMIT * (-1);
+
     private final List<ChatMessage> data;
     private final MessagesSelector messagesSelector;
     private final ChatDisposer disposer;
 
-    public MessagesListAdapter(ChatDisposer disposer) {
+    public MessagesListAdapter(Context context, ChatDisposer disposer) {
         this.data = new ArrayList<>();
         this.disposer = disposer;
         this.messagesSelector = new MessagesSelector(selected -> {});
+        List<ChatMessage> firstPage = this.loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
+        if (!firstPage.isEmpty() && !firstPage.get(firstPage.size()-1).isMine(context)) {
+            markAsRead();
+        }
+
     }
 
     public void setOnSelectMessageListener(MessagesSelector.OnSelectMessageListener listener) {
@@ -34,7 +42,7 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessageViewHolder>
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.chatbubble, parent, false);
 
-        return new MessageViewHolder(view, messagesSelector);
+        return new MessageViewHolder(view, messagesSelector, this);
     }
 
     @Override
@@ -47,7 +55,7 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessageViewHolder>
         holder.bindMessage(currentMessage);
 
         if (holder.isMine()) {
-            holder.setupMineDisplay(data.get(data.size() - 1).isMine());
+            holder.setupMineDisplay(data.get(data.size() - 1).isMine(holder.context()));
         } else {
             holder.setupNotMineDisplay(beforeMessage);
         }
@@ -67,7 +75,11 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessageViewHolder>
         notifyItemRangeInserted(0, messages.size());
     }
 
-    public List<ChatMessage> loadMore(int limit, int offset) {
+    public List<ChatMessage> loadMore() {
+        return loadMore(LIMIT, OFFSET = OFFSET + LIMIT);
+    }
+
+    private List<ChatMessage> loadMore(int limit, int offset) {
         List<ChatMessage> messages = disposer.loadMore(limit, offset);
         addAll(messages);
         return messages;
@@ -83,6 +95,13 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessageViewHolder>
         notifyItemRangeChanged(data.size() - 2, 2);
     }
 
+    public void remove( ChatMessage message) {
+        data.remove(message);
+        notifyDataSetChanged();
+
+        disposer.remove(message);
+    }
+
     public void removeAll(List<ChatMessage> messages) {
         data.removeAll(messages);
         notifyDataSetChanged();
@@ -91,8 +110,6 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessageViewHolder>
     }
 
     public void markAsRead() {
-        Log.d("MessagesListAdapter", "markAsRead");
-
         for(ChatMessage m: data)
             m.setRead(true);
 
@@ -103,5 +120,6 @@ public class MessagesListAdapter extends RecyclerView.Adapter<MessageViewHolder>
     @Override
     public void onDestroy() {
         messagesSelector.onDestroy();
+        disposer.onDestroy();
     }
 }

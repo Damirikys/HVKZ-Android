@@ -1,5 +1,6 @@
 package org.hvkz.hvkz.sync;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -7,9 +8,10 @@ import com.google.firebase.auth.FirebaseUser;
 
 import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.uapi.models.UAPIClient;
-import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
 import org.hvkz.hvkz.uapi.models.entities.User;
 import org.hvkz.hvkz.uapi.models.responses.UAPIUserResponse;
+import org.hvkz.hvkz.utils.ContextApp;
+import org.hvkz.hvkz.utils.network.NetworkStatus;
 
 import javax.inject.Inject;
 
@@ -24,8 +26,8 @@ public final class SyncInteractor
 
     private SyncInteractor(){}
 
-    public static SyncRequest with(String email) {
-        return new SyncRequest(email);
+    public static SyncRequest with(Context context, String email) {
+        return new SyncRequest(context, email);
     }
 
     public static class SyncRequest implements Callback<UAPIUserResponse>
@@ -36,11 +38,13 @@ public final class SyncInteractor
         @Inject
         FirebaseUser firebaseUser;
 
+        private HVKZApp app;
         private String address;
         private SyncCallback callback;
 
-        private SyncRequest(String email) {
-            HVKZApp.component().inject(this);
+        private SyncRequest(Context context, String email) {
+            this.app = ContextApp.getApp(context);
+            this.app.component().inject(this);
             this.address = email;
         }
 
@@ -50,7 +54,11 @@ public final class SyncInteractor
         }
 
         public void start() {
-            client.getUser(address).enqueue(this);
+            if (NetworkStatus.hasConnection(app)) {
+                client.getUser(address).enqueue(this);
+            } else {
+                if (callback != null) callback.onSuccessSync(app.getCurrentUser());
+            }
         }
 
         @Override
@@ -85,7 +93,7 @@ public final class SyncInteractor
             Log.d(TAG, uapiPhone + " " + firebasePhone);
 
             if (firebasePhone != null && firebasePhone.equals(uapiPhone)) {
-                UAPIUser.setCurrentUser(profile);
+                app.setCurrentUser(profile);
 
                 if (callback != null) callback.onSuccessSync(profile);
             } else {

@@ -1,6 +1,8 @@
 package org.hvkz.hvkz.xmpp;
 
+import android.app.ActivityManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.SystemClock;
@@ -11,16 +13,25 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import org.hvkz.hvkz.StubActivity;
 import org.hvkz.hvkz.adapters.SyncAdapter;
 import org.hvkz.hvkz.sync.SyncInteractor;
-import org.hvkz.hvkz.uapi.models.entities.UAPIUser;
 import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.utils.ContextApp;
+import org.hvkz.hvkz.utils.network.NetworkStatus;
 import org.hvkz.hvkz.xmpp.message_service.MessageReceiver;
 import org.hvkz.hvkz.xmpp.notification_service.ConnectionServiceController;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+
+import java.util.List;
+
+import static org.hvkz.hvkz.xmpp.BootBroadcast.BROADCAST_KEY;
 
 public class ConnectionService extends Service
 {
@@ -29,26 +40,46 @@ public class ConnectionService extends Service
     private XMPPCredentials credentials;
     private AbstractXMPPConnection connection;
     private ConnectionServiceController serviceController;
-
     private MessageReceiver messageReceiver;
+    private LogThread logThread;
+
+    public void startLogThread() {
+        Log.d(TAG, "LogThread started!");
+        if (logThread != null) {
+            logThread.interrupt();
+        }
+
+        logThread = new LogThread();
+        logThread.start();
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "Service was created!");
+        User user = ContextApp.getApp(this).getCurrentUser();
+        if (user != null) {
+            credentials = XMPPCredentials.getCredentials(user.getUserId());
+        }
+
         connection = XMPPConfiguration.connectionInstance(serviceController =
                 new ConnectionServiceController(this));
 
-        serviceController.startLogThread();
+        startLogThread();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (UAPIUser.isSynced()) {
-            Log.d(TAG, "Already synced.");
-            doAuthenticate(UAPIUser.getUAPIUser().getUserId());
+        if (intent != null && intent.getBooleanExtra(BROADCAST_KEY, false)) {
+            Log.d(TAG, "Internet is availabe! (From broadcast receiver)");
+            tryConnect();
         } else {
-            doSync();
+            if (ContextApp.getApp(this).isSynced()) {
+                Log.d(TAG, "Already synced.");
+                doAuthenticate(ContextApp.getApp(this).getCurrentUser().getUserId());
+            } else {
+                doSync();
+            }
         }
 
         return START_STICKY;
@@ -56,25 +87,20 @@ public class ConnectionService extends Service
 
     private void doSync() {
         Log.d(TAG, "Try sync...");
-
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null && firebaseUser.getEmail() != null && !firebaseUser.getEmail().isEmpty()) {
-            SyncInteractor.with(firebaseUser.getEmail())
-                    .call(new SyncAdapter()
-                    {
+            SyncInteractor.with(this, firebaseUser.getEmail())
+                    .call(new SyncAdapter() {
                         @Override
                         public void onSuccessSync(@NonNull User user) {
                             Log.d(TAG, "Success synced!");
-
-                            UAPIUser.setCurrentUser(user);
+                            ContextApp.getApp(ConnectionService.this).setCurrentUser(user);
                             doAuthenticate(user.getUserId());
                         }
 
                         @Override
                         public void onFailed(Throwable throwable) {
                             Log.d(TAG, "Sync failed.");
-
-                            doSync();
                         }
                     })
                     .start();
@@ -85,32 +111,61 @@ public class ConnectionService extends Service
     }
 
     private void doAuthenticate(int uid) {
-        if (!connection.isAuthenticated()) {
-            credentials = XMPPCredentials.getCredentials(uid);
-            tryConnect();
-        }
+        credentials = XMPPCredentials.getCredentials(uid);
+        tryConnect();
+    }
+
+    public boolean connectIsPossible() {
+        return NetworkStatus.hasConnection(this) &&
+                !connection.isConnected() &&
+                !connection.isAuthenticated() &&
+                FirebaseAuth.getInstance().getCurrentUser() != null &&
+                ContextApp.getApp(this).isSynced();
     }
 
     public void tryConnect() {
-        new Thread(() -> {
-            while (!connection.isConnected()) {
-                Log.d(TAG, "Try connect ...");
-                try { connection.connect(); break; }
-                catch (Exception e) {
-                    Log.d(TAG, "... failed");
-                    SystemClock.sleep(2000);
+        if (connectIsPossible()) {
+            new Thread(() -> {
+                try {
+                    Log.d(TAG, "Try connect ...");
+                    connection.connect();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "... connect failed");
                 }
-            }
-        }).start();
+            }).start();
+        } else {
+            Log.d(TAG, "Ooops... we can't do connect =(");
+            Log.d(TAG, "connected " + connection.isConnected());
+            Log.d(TAG, "aouthenticated " + connection.isAuthenticated());
+        }
     }
 
     public void recreateConnection() {
-        connection.disconnect();
         connection = XMPPConfiguration.connectionInstance(serviceController);
+    }
+
+    public void reanimate() {
+        Log.d(TAG, "Start StubActivity and reanimate service!");
+
+        recreateConnection();
+        Intent intent = new Intent(this, StubActivity.class);
+
+        if (isAppOnForeground()) {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        } else {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        }
+
+        startActivity(intent);
     }
 
     public AbstractXMPPConnection getConnection() {
         return connection;
+    }
+
+    public Roster getRoster() {
+        return Roster.getInstanceFor(connection);
     }
 
     public AccountManager getAccountManager() {
@@ -127,7 +182,15 @@ public class ConnectionService extends Service
 
     public MessageReceiver getMessageReceiver() {
         if (messageReceiver == null) {
-            messageReceiver = MessageReceiver.instanceOf(connection);
+            try {
+                messageReceiver = MessageReceiver.instanceOf(
+                        this, JidCreate.entityFullFrom(credentials.getXmppLogin() + "@" + XMPPConfiguration.DOMAIN + "/Android")
+                );
+            } catch (XmppStringprepException e) {
+                messageReceiver = MessageReceiver.instanceOf(
+                        this, connection.getUser()
+                );
+            }
         }
 
         return messageReceiver;
@@ -137,9 +200,69 @@ public class ConnectionService extends Service
         return credentials;
     }
 
+    private boolean isAppOnForeground() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+        if (appProcesses == null) {
+            return false;
+        }
+        final String packageName = getPackageName();
+        for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+            if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+                    && appProcess.processName.equals(packageName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return new LocalBinder<>(this);
+    }
+
+    private class LogThread extends Thread
+    {
+        @Override
+        public void run() {
+            super.run();
+
+            while (!isInterrupted()) {
+                Log.d(TAG, getName() + " : Has connection: " + NetworkStatus.hasConnection(ConnectionService.this));
+                Log.d(TAG, System.currentTimeMillis() + " : " +
+                        "authenticated " + connection.isAuthenticated() + " | " +
+                        "connected " + connection.isConnected()
+                );
+
+                if (messageReceiver != null) {
+                    if (!connection.isAuthenticated() || !NetworkStatus.hasConnection(ConnectionService.this)) {
+                        reanimate();
+                    }
+                }
+//
+//                if (!NetworkStatus.hasConnection(ConnectionService.this)) {
+//                    if (connection.isAuthenticated()) {
+//                        Log.d(TAG, "Start reanimate because we lost connection but stay online.");
+//                        reanimate();
+//                    } else {
+//                        tryConnect();
+//                    }
+//                } else {
+//                    if (!connection.isAuthenticated()) {
+//                        tryConnect();
+//                    }
+//                }
+
+                SystemClock.sleep(60000);
+            }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (logThread != null) logThread.interrupt();
+        connection.disconnect();
     }
 }
