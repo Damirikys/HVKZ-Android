@@ -23,6 +23,8 @@ public class Event<T>
     }
 
     public enum EventType {
-        USER_PROFILE_OPEN
+        GROUPS_DATA_WAS_CHANGED,
+        USER_PROFILE_OPEN,
+        UPDATE_GROUP_CHAT_WINDOW
     }
 }

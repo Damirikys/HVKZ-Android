@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.annotations.EventReceiver;
+import org.hvkz.hvkz.event.Event;
 import org.hvkz.hvkz.firebase.entities.Group;
 import org.hvkz.hvkz.xmpp.ConnectionService;
 import org.hvkz.hvkz.xmpp.messaging.ChatMessage;
@@ -29,12 +30,15 @@ public class MUCConnectionManager
     }
 
     @EventReceiver
-    public void onGroupStateChanged(List<Group> groups) {
-        app.getOptionsStorage().isAccepted(value -> {
-            if (value) {
-                mucHandlerProcess(groups);
-            }
-        });
+    public void onGroupStateChanged(Event<List<Group>> event) {
+        if (event.getType() == Event.EventType.GROUPS_DATA_WAS_CHANGED) {
+            List<Group> groups = event.getData();
+            app.getOptionsStorage().isAccepted(value -> {
+                if (value) {
+                    mucHandlerProcess(groups);
+                }
+            });
+        }
     }
 
     private void mucHandlerProcess(List<Group> groups) {

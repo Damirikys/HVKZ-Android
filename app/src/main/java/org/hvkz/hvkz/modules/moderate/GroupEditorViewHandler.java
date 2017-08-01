@@ -126,6 +126,8 @@ class GroupEditorViewHandler extends ViewHandler<GroupEditorPresenter>
     public void onCompleteClick(View view) {
         String notice = noticeInput.getText().toString();
         if (!notice.isEmpty()) {
+            selectedUsers.add(ContextApp.getApp(context()).getCurrentUser().getUserId());
+
             if (group != null) {
                 group.setNotice(noticeInput.getText().toString());
                 presenter().editGroup(group, selectedUsers);

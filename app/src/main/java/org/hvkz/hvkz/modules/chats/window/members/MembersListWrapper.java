@@ -6,7 +6,6 @@ import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
 import android.view.View;
 
-import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.firebase.entities.Group;
 import org.hvkz.hvkz.templates.UniversalAdapter;
 import org.hvkz.hvkz.uapi.User;
@@ -52,8 +51,6 @@ public class MembersListWrapper implements MembersListAction
         members.remove(user.getUserId());
         group.setMembers(members);
         dismiss();
-
-        EventChannel.send(group);
     }
 
     @Override

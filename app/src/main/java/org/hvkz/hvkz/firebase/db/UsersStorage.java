@@ -11,7 +11,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 
-import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.interfaces.Callback;
 import org.hvkz.hvkz.uapi.User;
 import org.hvkz.hvkz.uapi.entities.UnknownUser;
@@ -63,7 +62,7 @@ public class UsersStorage
         }
     }
 
-    public void getByIdFromRemote(int userId, Callback<User> callback) {
+    public synchronized void getByIdFromRemote(int userId, Callback<User> callback) {
         database.child(String.valueOf(userId))
             .addListenerForSingleValueEvent(new ValueEventListener()
             {
@@ -71,11 +70,8 @@ public class UsersStorage
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     try {
                         UserItem fbUser = dataSnapshot.getValue(UserItem.class);
-                        System.out.println(dataSnapshot.toString());
-                        System.out.println(fbUser.data);
                         UserEntity entity = JSONFactory.fromJson(fbUser.data, UserEntity.class);
                         entity.setDevices(fbUser.devices);
-
                         preferences.edit().putString(String.valueOf(userId), fbUser.data).apply();
                         callback.call(entity);
                     } catch (Exception e) {
@@ -86,16 +82,9 @@ public class UsersStorage
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
-                    databaseError.toException().printStackTrace();
+                    callback.call(new UnknownUser());
                 }
             });
-    }
-
-    public void getByIdWithUpdates(int userId, Callback<User> callback) {
-        getByIdFromCache(userId, value -> {
-            callback.call(value);
-            getByIdFromRemote(userId, callback);
-        });
     }
 
     public void getProfilesFromCache(List<Integer> ids, Callback<SparseArray<User>> callback) {
@@ -111,28 +100,19 @@ public class UsersStorage
         }
     }
 
-    public void getProfilesFromRemote(List<Integer> ids, Callback<SparseArray<User>> callback) {
+    public synchronized void getProfilesFromRemote(List<Integer> ids, Callback<SparseArray<User>> callback) {
         final SparseArray<User> sparseArray = new SparseArray<>();
-
         for (Integer id : ids) {
             getByIdFromRemote(id, value -> {
                 sparseArray.put(id, value);
                 if (sparseArray.size() == ids.size()) {
-                    EventChannel.send(sparseArray);
                     callback.call(sparseArray);
                 }
             });
         }
     }
 
-    public void getProfilesWithUpdates(List<Integer> ids, Callback<SparseArray<User>> callback) {
-        getProfilesFromCache(ids, value -> {
-            callback.call(value);
-            getProfilesFromRemote(ids, callback);
-        });
-    }
-
-    public void getUsersDatabase(Callback<List<User>> callback) {
+    public synchronized void getUsersDatabase(Callback<List<User>> callback) {
         database.addListenerForSingleValueEvent(new ValueEventListener()
         {
             @Override

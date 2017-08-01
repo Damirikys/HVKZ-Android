@@ -24,18 +24,20 @@ public abstract class EventChannel
         receivers.remove(receiver);
     }
 
-    public static void send(Object data) {
+    public static <T> void send(Event<T> data) {
+        System.out.println(data.getType().name());
+
         for (Object receiver : receivers) {
-            new Thread(() -> {
-                for (Method method : receiver.getClass().getDeclaredMethods()) {
-                    if (method.isAnnotationPresent(EventReceiver.class)) {
-                        handler.post(() -> {
-                            try { method.invoke(receiver, data);}
-                            catch (Exception ignored) {}
-                        });
-                    }
+            for (Method method : receiver.getClass().getDeclaredMethods()) {
+                if (method.isAnnotationPresent(EventReceiver.class)) {
+                    handler.post(() -> {
+                        try {
+                            method.invoke(receiver, data);
+                        }
+                        catch (Exception ignored) {}
+                    });
                 }
-            }).start();
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package org.hvkz.hvkz.xmpp;
 
 import android.util.Log;
 
+import org.hvkz.hvkz.event.Event;
 import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.xmpp.messaging.MessageReceiver;
@@ -65,7 +66,9 @@ public class ConnectionContractor extends AbstractConnectionListener
     @Override
     public void authenticated(XMPPConnection connection, boolean resumed) {
         super.authenticated(connection, resumed);
-        ContextApp.getApp(service).getGroupsStorage().getMyGroups(REMOTE, EventChannel::send);
+        ContextApp.getApp(service).getGroupsStorage().getMyGroups(REMOTE,
+                value -> EventChannel.send(new Event<>(Event.EventType.GROUPS_DATA_WAS_CHANGED).setData(value))
+        );
     }
 
     @Override

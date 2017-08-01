@@ -4,7 +4,6 @@ import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 import org.hvkz.hvkz.R;
-import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.firebase.db.GroupsStorage;
 import org.hvkz.hvkz.firebase.db.UsersStorage;
 import org.hvkz.hvkz.firebase.entities.Group;
@@ -108,11 +107,6 @@ public class GroupEditorPresenter extends BasePresenter<GroupEditorPresenter>
             } else {
                 onGroupCreateFailed();
             }
-        });
-
-        usersStorage.getProfilesFromCache(group.members, value -> {
-            editedGroup.setMembers(value);
-            EventChannel.send(editedGroup);
         });
     }
 

@@ -31,6 +31,7 @@ import org.hvkz.hvkz.adapters.TextWatcherAdapter;
 import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.annotations.EventReceiver;
 import org.hvkz.hvkz.annotations.OnClick;
+import org.hvkz.hvkz.event.Event;
 import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.Callback;
@@ -60,8 +61,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class ChatWindowViewHandler extends ViewHandler<ChatWindowPresenter> implements
         OnDateChangeListener, MessagesSelector.OnSelectMessageListener
 {
-    public static final String EVENT_UPDATE = "org.hvkz.hvkz.EVENT_UPDATE";
-
     @BindView(R.id.photo_toolbar)
     private CircleImageView photoView;
 
@@ -313,8 +312,8 @@ public class ChatWindowViewHandler extends ViewHandler<ChatWindowPresenter> impl
     }
 
     @EventReceiver
-    public void onUpdateEventReceive(String event) {
-        if (EVENT_UPDATE.equals(event)) {
+    public void onUpdateEventReceive(Event<Object> event) {
+        if (event.getType() == Event.EventType.UPDATE_GROUP_CHAT_WINDOW) {
             this.titleView.setText(disposer.getTitle());
             this.statusView.setText(disposer.getDefaultStatus());
         }

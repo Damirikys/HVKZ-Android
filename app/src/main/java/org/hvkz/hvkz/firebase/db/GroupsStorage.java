@@ -12,6 +12,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.adapters.EventAdapter;
+import org.hvkz.hvkz.event.Event;
 import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.firebase.entities.Group;
 import org.hvkz.hvkz.interfaces.Callback;
@@ -39,10 +40,17 @@ public class GroupsStorage
         this.database = FirebaseDatabase.getInstance().getReference(KEY);
         this.preferences = app.getSharedPreferences(KEY, Context.MODE_PRIVATE);
         this.database.keepSynced(true);
+    }
+
+    public void init() {
         this.database.addChildEventListener(new EventAdapter() {
             @Override
             public void onDataWasChanged() {
-                getMyGroups(REMOTE, EventChannel::send);
+                getMyGroups(REMOTE, value -> EventChannel.send(
+                        new Event<List<Group>>(Event.EventType.GROUPS_DATA_WAS_CHANGED)
+                                .setData(value)
+                        )
+                );
             }
         });
     }
@@ -50,15 +58,15 @@ public class GroupsStorage
     public void createGroup(String groupName, GroupItem groupItem, Callback<Boolean> callback) {
         database.child(groupName)
                 .setValue(groupItem)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful())
-                        getMyGroups(REMOTE, EventChannel::send);
-
-                    callback.call(task.isSuccessful());
-                });
+                .addOnCompleteListener(task -> callback.call(task.isSuccessful()));
     }
 
     public void excludeMember(User user, Group group, Callback<Boolean> callback) {
+        if (app.getCurrentUser().getUserId() == user.getUserId()) {
+            callback.call(false);
+            return;
+        }
+
         SparseArray<User> array = group.getMembers();
         List<Integer> members = new ArrayList<>();
         for (int i = 0; i < array.size(); i++) {
@@ -80,7 +88,7 @@ public class GroupsStorage
                 List<Group> groups = new LinkedList<>();
                 Set<String> keySet = preferences.getAll().keySet();
                 if (keySet.size() == 0) {
-                    getAllFromRemote(callback);
+                    getMyGroups(REMOTE, callback);
                     return;
                 }
 
@@ -105,42 +113,36 @@ public class GroupsStorage
         });
     }
 
-    public void getAllFromRemote(Callback<List<Group>> callback) {
+    public void getGroupsFromRemote(Callback<List<GroupItem>> callback) {
         app.getOptionsStorage().isAccepted(accepted -> {
             if (accepted) {
                 database.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        List<Group> groups = new LinkedList<>();
                         preferences.edit().clear().apply();
 
+                        List<GroupItem> groups = new LinkedList<>();
                         for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
-                            GroupItem groupItem = snapshot.getValue(GroupItem.class);
-                            if (groupItem != null) {
-                                groupItem.members.removeAll(Collections.singleton(null));
+                            try {
+                                GroupItem groupItem = snapshot.getValue(GroupItem.class);
+                                if (groupItem != null && groupItem.members != null) {
+                                    groupItem.groupname = snapshot.getKey();
+                                    groupItem.members.removeAll(Collections.singleton(null));
+                                    preferences.edit()
+                                            .putString(snapshot.getKey(), JSONFactory.toJson(groupItem))
+                                            .apply();
 
-                                preferences.edit()
-                                        .putString(snapshot.getKey(), JSONFactory.toJson(groupItem))
-                                        .apply();
-
-                                app.getUsersStorage().getProfilesFromRemote(groupItem.members, members -> {
-                                    groups.add(new Group()
-                                            .setGroupName(snapshot.getKey())
-                                            .setMembers(members)
-                                            .setAdmin(members.get(groupItem.admin))
-                                            .setNotice(groupItem.notice));
-
-                                    if (groups.size() == dataSnapshot.getChildrenCount()) {
-                                        callback.call(groups);
-                                    }
-                                });
-                            }
+                                    groups.add(groupItem);
+                                }
+                            } catch (Exception ignored) {}
                         }
+
+                        callback.call(groups);
                     }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        databaseError.toException().printStackTrace();
+                        callback.call(Collections.emptyList());
                     }
                 });
             } else {
@@ -158,7 +160,26 @@ public class GroupsStorage
         if (from == LOCAL) {
             getAllFromCache(value -> callback.call(findUserGroups(userId, value)));
         } else {
-            getAllFromRemote(value -> callback.call(findUserGroups(userId, value)));
+            getGroupsFromRemote(groupItems -> {
+                final List<Group> groups = new LinkedList<>();
+                for (GroupItem item : groupItems) {
+                    if (item.members.contains(userId)) {
+                        app.getUsersStorage().getProfilesFromRemote(item.members, value -> {
+                            Group group = new Group()
+                                    .setAdmin(value.get(item.admin))
+                                    .setMembers(value)
+                                    .setGroupName(item.groupname)
+                                    .setNotice(item.notice);
+
+                            groups.add(group);
+
+                            if (groups.size() == groupItems.size()) {
+                                callback.call(groups);
+                            }
+                        });
+                    }
+                }
+            });
         }
     }
 
@@ -186,6 +207,7 @@ public class GroupsStorage
     public static class GroupItem {
         public int admin;
         public String notice;
+        public String groupname;
         public List<Integer> members;
     }
 }

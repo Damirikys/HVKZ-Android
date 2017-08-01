@@ -13,6 +13,7 @@ import com.github.vivchar.viewpagerindicator.ViewPagerIndicator;
 import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.EventReceiver;
+import org.hvkz.hvkz.event.Event;
 import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.firebase.entities.Group;
 import org.hvkz.hvkz.interfaces.Callback;
@@ -46,27 +47,34 @@ public class GroupsPagerAdapter extends PagerAdapter implements Destroyable
         this.indicator = indicator;
         this.groupItems = new ArrayList<>();
         this.handler = new Handler(Looper.getMainLooper());
-        onGroupsUpdate(groups);
+
+        Event<List<Group>> event = new Event<>(Event.EventType.GROUPS_DATA_WAS_CHANGED);
+        event.setData(groups);
+
+        onGroupsUpdate(event);
         EventChannel.connect(this);
     }
 
     @EventReceiver
-    public void onGroupsUpdate(List<Group> groups) {
-        unsubscribe(service -> {
-            mCurrentPosition = -1;
-            groupItems.clear();
+    public void onGroupsUpdate(Event<List<Group>> event) {
+        if (event.getType() == Event.EventType.GROUPS_DATA_WAS_CHANGED) {
+            List<Group> groups = event.getData();
+            unsubscribe(service -> {
+                mCurrentPosition = -1;
+                groupItems.clear();
 
-            for (Group group : groups) {
-                GroupItem groupItem = new GroupItem(GroupsPagerAdapter.this, group);
-                groupItems.add(groupItem);
-                service.getMessageReceiver().subscribe(groupItem);
-            }
+                for (Group group : groups) {
+                    GroupItem groupItem = new GroupItem(GroupsPagerAdapter.this, group);
+                    groupItems.add(groupItem);
+                    service.getMessageReceiver().subscribe(groupItem);
+                }
 
-            handler.post(() -> {
-                viewPager.setAdapter(GroupsPagerAdapter.this);
-                indicator.setupWithViewPager(viewPager);
+                handler.post(() -> {
+                    viewPager.setAdapter(GroupsPagerAdapter.this);
+                    indicator.setupWithViewPager(viewPager);
+                });
             });
-        });
+        }
     }
 
     @Override

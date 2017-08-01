@@ -143,6 +143,8 @@ public class HVKZApp extends Application
                 Context.BIND_AUTO_CREATE |
                 Context.BIND_IMPORTANT
         );
+
+        groupsStorage.init();
     }
     /* ------------ */
 

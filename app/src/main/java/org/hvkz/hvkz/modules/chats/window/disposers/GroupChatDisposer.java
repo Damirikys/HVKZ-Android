@@ -9,6 +9,7 @@ import android.view.View;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.EventReceiver;
+import org.hvkz.hvkz.event.Event;
 import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.firebase.entities.Group;
 import org.hvkz.hvkz.modules.chats.window.ChatDisposer;
@@ -23,7 +24,7 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
 
-import static org.hvkz.hvkz.modules.chats.window.ui.ChatWindowViewHandler.EVENT_UPDATE;
+import java.util.List;
 
 public class GroupChatDisposer extends ChatDisposer
 {
@@ -105,10 +106,16 @@ public class GroupChatDisposer extends ChatDisposer
     }
 
     @EventReceiver
-    public void onGroupModify(Group receivedGroup) {
-        if (group.getGroupName().equals(receivedGroup.getGroupName())) {
-            group = receivedGroup;
-            EventChannel.send(EVENT_UPDATE);
+    public void onGroupModify(Event<List<Group>> event) {
+        if (event.getType() == Event.EventType.GROUPS_DATA_WAS_CHANGED) {
+            List<Group> data = event.getData();
+            for (Group groupData : data) {
+                if (groupData.getGroupName().equals(group.getGroupName())) {
+                    group = groupData;
+                    EventChannel.send(new Event<>(Event.EventType.UPDATE_GROUP_CHAT_WINDOW));
+                    break;
+                }
+            }
         }
     }
 }
