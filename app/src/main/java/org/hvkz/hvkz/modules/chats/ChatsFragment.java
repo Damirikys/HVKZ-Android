@@ -6,8 +6,8 @@ import android.view.View;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.Layout;
-import org.hvkz.hvkz.models.AppFragment;
-import org.hvkz.hvkz.modules.RouteChannel;
+import org.hvkz.hvkz.router.RouteChannel;
+import org.hvkz.hvkz.uimodels.AppFragment;
 
 @Layout(R.layout.fragment_chats_list)
 public class ChatsFragment extends AppFragment<ChatsPresenter>

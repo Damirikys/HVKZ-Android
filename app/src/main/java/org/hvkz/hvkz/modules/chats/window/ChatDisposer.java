@@ -5,13 +5,17 @@ import android.net.Uri;
 
 import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.database.MessagesStorage;
+import org.hvkz.hvkz.event.EventChannel;
 import org.hvkz.hvkz.interfaces.Callback;
 import org.hvkz.hvkz.interfaces.Destroyable;
 import org.hvkz.hvkz.modules.chats.ChatType;
+import org.hvkz.hvkz.modules.chats.window.disposers.GroupChatDisposer;
+import org.hvkz.hvkz.modules.chats.window.disposers.PersonalChatDisposer;
+import org.hvkz.hvkz.modules.chats.window.ui.ChatWindowPresenter;
 import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.xmpp.ConnectionService;
-import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
-import org.hvkz.hvkz.xmpp.models.ChatMessage;
+import org.hvkz.hvkz.xmpp.messaging.AbstractMessageObserver;
+import org.hvkz.hvkz.xmpp.messaging.ChatMessage;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
@@ -19,30 +23,32 @@ import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jivesoftware.smackx.chatstates.packet.ChatStateExtension;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
-import org.jxmpp.jid.Jid;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
+@SuppressWarnings("WeakerAccess")
 public abstract class ChatDisposer extends AbstractMessageObserver implements Destroyable
 {
-    private final HVKZApp app;
     private final ConnectionService service;
 
-    protected final Jid chatJid;
-    protected final MessagesStorage storage;
-
+    private final EntityBareJid chatJid;
     private List<AbstractMessageObserver> observers;
+
+    @Inject
+    MessagesStorage storage;
 
     public ChatDisposer(ConnectionService service, EntityBareJid jid) {
         super(jid);
-        this.app = ContextApp.getApp(service);
+        ContextApp.getApp(service).component().inject(this);
         this.service = service;
         this.chatJid = jid;
-        this.storage = app.getMessagesStorage();
         this.observers = new ArrayList<>();
 
+        EventChannel.connect(this);
         getService().getMessageReceiver().subscribe(this);
     }
 
@@ -54,49 +60,31 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
         }
     }
 
-    public void sendComposingStatus() {
+    private void sendStatusPacket(ChatState state) {
         try {
             Message statusPacket = new Message();
             statusPacket.setBody(null);
             statusPacket.setType(getMessageType());
             statusPacket.setTo(chatJid);
             statusPacket.setFrom(getService().getConnection().getUser());
-            ChatStateExtension extension = new ChatStateExtension(ChatState.composing);
+            ChatStateExtension extension = new ChatStateExtension(state);
             statusPacket.addExtension(extension);
             getService().getConnection().sendStanza(statusPacket);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendComposingStatus() {
+        sendStatusPacket(ChatState.composing);
     }
 
     public void sendActiveStatus() {
-        try {
-            Message statusPacket = new Message();
-            statusPacket.setBody(null);
-            statusPacket.setType(getMessageType());
-            statusPacket.setTo(chatJid);
-            statusPacket.setFrom(getService().getConnection().getUser());
-            ChatStateExtension extension = new ChatStateExtension(ChatState.active);
-            statusPacket.addExtension(extension);
-            getService().getConnection().sendStanza(statusPacket);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        sendStatusPacket(ChatState.active);
     }
 
     public void sendInactiveStatus() {
-        try {
-            Message statusPacket = new Message();
-            statusPacket.setBody(null);
-            statusPacket.setType(getMessageType());
-            statusPacket.setTo(chatJid);
-            statusPacket.setFrom(getService().getConnection().getUser());
-            ChatStateExtension extension = new ChatStateExtension(ChatState.inactive);
-            statusPacket.addExtension(extension);
-            getService().getConnection().sendStanza(statusPacket);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        sendStatusPacket(ChatState.inactive);
     }
 
     public void onToolbarClick(Context context) {}
@@ -111,8 +99,13 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
 
     public abstract Uri getPhotoUri();
 
-    protected ConnectionService getService() {
+    public ConnectionService getService() {
         return service;
+    }
+
+    @Override
+    public EntityBareJid getChatJid() {
+        return chatJid;
     }
 
     @Override
@@ -162,17 +155,21 @@ public abstract class ChatDisposer extends AbstractMessageObserver implements De
 
     @Override
     public void onDestroy() {
+        EventChannel.disconnect(this);
         getService().getMessageReceiver().unsubscribe(this);
         observers.clear();
     }
 
-    public static void obtain(Callback<ChatDisposer> disposerCallback, Context context, ChatType chatType, String domain) {
-        HVKZApp app = ContextApp.getApp(context);
+    public static void obtain(Callback<ChatDisposer> disposerCallback,
+                              ChatWindowPresenter presenter,
+                              ChatType chatType,
+                              String domain) {
+        HVKZApp app = ContextApp.getApp(presenter.context());
         app.bindConnectionService(service -> {
             switch (chatType) {
                 case MULTI_USER_CHAT:
                     app.getGroupsStorage().getGroupByName(domain, group ->
-                            disposerCallback.call(new GroupChatDisposer(service, group)));
+                            disposerCallback.call(new GroupChatDisposer(presenter, service, group)));
                     break;
                 case PERSONAL_CHAT:
                     app.getUsersStorage().getByIdFromCache(Integer.valueOf(domain), user -> {

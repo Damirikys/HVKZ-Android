@@ -37,7 +37,7 @@
 
     <style name="MyDialogTheme" parent="AlertDialog.AppCompat.Light">
 
-        <!-- No backgrounds, titles or window float -->
+        <!-- No backgrounds, titles or baseWindow float -->
         <item name="android:windowBackground">@null</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">true</item>

@@ -14,18 +14,21 @@ import org.hvkz.hvkz.database.MessagesStorage;
 import org.hvkz.hvkz.di.DaggerIComponent;
 import org.hvkz.hvkz.di.DependencyProvider;
 import org.hvkz.hvkz.di.IComponent;
+import org.hvkz.hvkz.event.EventChannel;
+import org.hvkz.hvkz.firebase.db.GroupsStorage;
 import org.hvkz.hvkz.firebase.db.MenuStorage;
-import org.hvkz.hvkz.firebase.db.groups.GroupsStorage;
-import org.hvkz.hvkz.firebase.db.photos.PhotosStorage;
-import org.hvkz.hvkz.firebase.db.users.UsersStorage;
+import org.hvkz.hvkz.firebase.db.OptionsStorage;
+import org.hvkz.hvkz.firebase.db.PhotosStorage;
+import org.hvkz.hvkz.firebase.db.UsersStorage;
 import org.hvkz.hvkz.interfaces.Callback;
-import org.hvkz.hvkz.uapi.models.UAPIClient;
-import org.hvkz.hvkz.uapi.models.entities.User;
-import org.hvkz.hvkz.uapi.models.entities.UserProfile;
+import org.hvkz.hvkz.templates.LocalBinder;
+import org.hvkz.hvkz.uapi.UAPIClient;
+import org.hvkz.hvkz.uapi.User;
+import org.hvkz.hvkz.uapi.entities.UserEntity;
+import org.hvkz.hvkz.utils.controllers.NotificationController;
 import org.hvkz.hvkz.utils.serialize.JSONFactory;
 import org.hvkz.hvkz.xmpp.ConnectionService;
-import org.hvkz.hvkz.xmpp.LocalBinder;
-import org.hvkz.hvkz.xmpp.notification_service.NotificationService;
+import org.hvkz.hvkz.xmpp.utils.MUCConnectionManager;
 
 public class HVKZApp extends Application
 {
@@ -37,8 +40,9 @@ public class HVKZApp extends Application
 
     private UAPIClient uapiClient;
 
-    private NotificationService notificationService;
+    private NotificationController notificationController;
     private MessagesStorage messagesStorage;
+    private OptionsStorage optionsStorage;
     private GalleryStorage galleryStorage;
     private GroupsStorage groupsStorage;
     private PhotosStorage photosStorage;
@@ -69,13 +73,14 @@ public class HVKZApp extends Application
         preferences = getSharedPreferences(USER_PREFERENCES, MODE_PRIVATE);
         String userCache = preferences.getString(USER_PREFERENCES, "");
         if (!userCache.isEmpty()) {
-            currentUser = JSONFactory.fromJson(preferences.getString(USER_PREFERENCES, ""), UserProfile.class);
+            currentUser = JSONFactory.fromJson(preferences.getString(USER_PREFERENCES, ""), UserEntity.class);
         }
 
         uapiClient = new UAPIClient();
 
-        notificationService = new NotificationService(this);
+        notificationController = new NotificationController(this);
         messagesStorage = new MessagesStorage(this);
+        optionsStorage = new OptionsStorage(this);
         galleryStorage = new GalleryStorage(this);
         groupsStorage = new GroupsStorage(this);
         photosStorage = new PhotosStorage(this);
@@ -83,6 +88,9 @@ public class HVKZApp extends Application
         menuStorage = new MenuStorage(this);
 
         menuStorage.getAllFromRemote(x -> {});
+        optionsStorage.getOptionsFromRemote(x -> {});
+
+        EventChannel.connect(new MUCConnectionManager(this));
     }
 
     /* Storage getters */
@@ -110,6 +118,10 @@ public class HVKZApp extends Application
         return menuStorage;
     }
 
+    public OptionsStorage getOptionsStorage() {
+        return optionsStorage;
+    }
+
     /* ---------------- */
 
     /* User options */
@@ -119,10 +131,7 @@ public class HVKZApp extends Application
 
     public void setCurrentUser(User user) {
         currentUser = user;
-        preferences.edit()
-                .putString(USER_PREFERENCES, JSONFactory.toJson(user))
-                .apply();
-
+        preferences.edit().putString(USER_PREFERENCES, JSONFactory.toJson(user)).apply();
         usersStorage.update(currentUser);
 
         Intent serviceIntent = new Intent(this, ConnectionService.class);
@@ -139,28 +148,30 @@ public class HVKZApp extends Application
 
     /* Services */
     public void bindConnectionService(Callback<ConnectionService> callback) {
-        if (serviceBinder == null) {
-            bindService(new Intent(this, ConnectionService.class), serviceConnection,
-                    Context.BIND_ABOVE_CLIENT |
-                            Context.BIND_AUTO_CREATE |
-                            Context.BIND_IMPORTANT
-            );
+        new Thread(() -> {
+            if (serviceBinder == null) {
+                bindService(new Intent(getApplicationContext(), ConnectionService.class), serviceConnection,
+                        Context.BIND_ABOVE_CLIENT |
+                                Context.BIND_AUTO_CREATE |
+                                Context.BIND_IMPORTANT
+                );
 
-            new Thread(() -> {
-                while (true) {
-                    if (serviceBinder != null) {
-                        callback.call(serviceBinder.getService());
-                        break;
+                new Thread(() -> {
+                    while (true) {
+                        if (serviceBinder != null) {
+                            callback.call(serviceBinder.getService());
+                            break;
+                        }
                     }
-                }
-            }).start();
-        } else {
-            callback.call(serviceBinder.getService());
-        }
+                }).start();
+            } else {
+                callback.call(serviceBinder.getService());
+            }
+        }).start();
     }
 
-    public NotificationService getNotificationService() {
-        return notificationService;
+    public NotificationController getNotificationService() {
+        return notificationController;
     }
 
     public UAPIClient getUAPIclient() {

@@ -1,12 +1,12 @@
 package org.hvkz.hvkz.modules.chats;
 
 import org.hvkz.hvkz.interfaces.BaseWindow;
-import org.hvkz.hvkz.interfaces.ViewHandler;
-import org.hvkz.hvkz.models.BasePresenter;
+import org.hvkz.hvkz.templates.BasePresenter;
+import org.hvkz.hvkz.templates.ViewHandler;
 
-public class ChatsPresenter extends BasePresenter<ChatsPresenter>
+class ChatsPresenter extends BasePresenter<ChatsPresenter>
 {
-    public ChatsPresenter(BaseWindow<ChatsPresenter> activity) {
+    ChatsPresenter(BaseWindow<ChatsPresenter> activity) {
         super(activity);
     }
 

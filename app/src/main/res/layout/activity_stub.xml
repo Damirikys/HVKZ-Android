@@ -4,6 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="org.hvkz.hvkz.StubActivity">
+    tools:context="org.hvkz.hvkz.xmpp.utils.ReanimateActivity">
 
 </android.support.constraint.ConstraintLayout>

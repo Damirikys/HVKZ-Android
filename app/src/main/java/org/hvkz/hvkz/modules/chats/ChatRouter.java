@@ -6,10 +6,10 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 
 import org.hvkz.hvkz.R;
-import org.hvkz.hvkz.models.AppFragment;
-import org.hvkz.hvkz.models.Router;
-import org.hvkz.hvkz.modules.RouteChannel;
-import org.hvkz.hvkz.modules.chats.window.ChatWindowFragment;
+import org.hvkz.hvkz.modules.chats.window.ui.ChatWindowFragment;
+import org.hvkz.hvkz.router.RouteChannel;
+import org.hvkz.hvkz.router.Router;
+import org.hvkz.hvkz.uimodels.AppFragment;
 
 public class ChatRouter extends Router
 {
@@ -29,7 +29,7 @@ public class ChatRouter extends Router
         return transaction.add(R.id.fragmentContainer, AppFragment.instanceOf(ChatsFragment.class));
     }
 
-    public void moveToChat(ChatType chatType, String domain) {
+    private void moveToChat(ChatType chatType, String domain) {
         Bundle bundle = new Bundle();
         bundle.putSerializable(CHAT_TYPE_KEY, chatType);
         bundle.putString(DOMAIN_KEY, domain);

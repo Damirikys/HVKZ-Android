@@ -20,11 +20,11 @@ import org.hvkz.hvkz.adapters.TextWatcherAdapter;
 import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.annotations.OnClick;
 import org.hvkz.hvkz.interfaces.BaseWindow;
-import org.hvkz.hvkz.interfaces.ViewHandler;
-import org.hvkz.hvkz.models.AppActivity;
-import org.hvkz.hvkz.models.BasePresenter;
-import org.hvkz.hvkz.modules.MainActivity;
-import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.modules.NavigationActivity;
+import org.hvkz.hvkz.templates.BasePresenter;
+import org.hvkz.hvkz.templates.ViewHandler;
+import org.hvkz.hvkz.uapi.User;
+import org.hvkz.hvkz.uimodels.AppActivity;
 import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
 import org.hvkz.hvkz.utils.validators.EmailValidator;
@@ -36,12 +36,12 @@ public class SyncPresenter extends BasePresenter<SyncPresenter> implements SyncC
     @Inject
     FirebaseUser firebaseUser;
 
-    public SyncPresenter(BaseWindow<SyncPresenter> baseWindow) {
+    SyncPresenter(BaseWindow<SyncPresenter> baseWindow) {
         super(baseWindow);
         ContextApp.getApp(context()).component().inject(this);
     }
 
-    public void startSync(String address) {
+    private void startSync(String address) {
         SyncInteractor.with(context(), address)
                 .call(this)
                 .start();
@@ -65,10 +65,10 @@ public class SyncPresenter extends BasePresenter<SyncPresenter> implements SyncC
 
         new BottomDialog.Builder(context())
                 .setCancelable(false)
-                .setTitle("Введите пароль")
-                .setContent("Вы можете указать такой же пароль как для сайта, так и для приложения.")
+                .setTitle(R.string.enter_password)
+                .setContent(R.string.password_notice)
                 .setCustomView(passwordEditText)
-                .setPositiveText("Сохранить")
+                .setPositiveText(R.string.save)
                 .autoDismiss(false)
                 .onPositive(bottomDialog -> {
                     final String password = passwordEditText.getText().toString();
@@ -77,11 +77,12 @@ public class SyncPresenter extends BasePresenter<SyncPresenter> implements SyncC
                             .addOnCompleteListener(task -> {
                                 if (task.isSuccessful()) {
                                     AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), password);
-                                    firebaseUser.reauthenticate(credential).addOnCompleteListener(task1 ->
-                                            activity().startActivity(new Intent(activity(), MainActivity.class))
-                                    );
+                                    firebaseUser.reauthenticate(credential).addOnCompleteListener(task1 -> {
+                                        activity().startActivity(new Intent(activity(), NavigationActivity.class));
+                                        activity().finish();
+                                    });
                                 } else {
-                                    Toast.makeText(context(), "Что-то пошло не так. Попробуйте снова.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(context(), R.string.failed, Toast.LENGTH_SHORT).show();
                                 }
                             });
 
@@ -98,21 +99,21 @@ public class SyncPresenter extends BasePresenter<SyncPresenter> implements SyncC
 
     @Override
     public void numberMismatch() {
-        dialogMessage("Неверные данные", "Ваш номер не совпадает с номером, указанным в аккаунте.");
+        dialogMessage(string(R.string.wrong_data), string(R.string.phone_does_not_match));
     }
 
     @Override
     public void accountNotFound() {
-        dialogMessage("Не найдено", "Аккаунт с таким E-mail адресом не найден.");
+        dialogMessage(string(R.string.not_found), string(R.string.account_email_not_exist));
     }
 
     @Override
     public void onFailed(Throwable throwable) {
         throwable.printStackTrace();
         if (NetworkStatus.hasConnection(context())) {
-            dialogMessage("Не удалось", "Не удалось синхронизироваться. Проверьте, что в аккаунте на сайте указан Ваш номер телефона.");
+            dialogMessage(string(R.string.failed), string(R.string.sync_failed_check_phone));
         } else {
-            dialogMessage("Нет соединения", "Пожалуйста, проверьте подключение к интернету и повторите попытку.");
+            dialogMessage(string(R.string.no_connected), string(R.string.check_connect_and_retry));
         }
     }
 
@@ -140,7 +141,7 @@ public class SyncPresenter extends BasePresenter<SyncPresenter> implements SyncC
             @OnClick(R.id.email_confirm_button)
             public void onEmailConfirm(View view) {
                 if (EmailValidator.emailAddressIsCorrect(emailEditText.getText().toString())) {
-                    activity.showProgress("Подождите...");
+                    activity.showProgress(string(R.string.please_wait));
                     SyncPresenter.this.startSync(emailEditText.getText().toString());
                 }
             }

@@ -3,13 +3,17 @@ package org.hvkz.hvkz.utils;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Random;
 
 public class Tools
 {
+    public static final int NONCE_LENGTH = 30;
+
     private static Calendar currentCalendar;
     private static String[] months = new String[] {
             "января",
@@ -26,20 +30,24 @@ public class Tools
             "декабря"
     };
 
+    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+
     static {
         currentCalendar = Calendar.getInstance();
         currentCalendar.setTimeInMillis(System.currentTimeMillis());
     }
 
-    public static String getDateStamp(long unix)
-    {
+    public static String getDateStringFormat(long unix) {
+        if (String.valueOf(unix).length() == 10)
+            unix *= 1000;
+
         Calendar calendar = new GregorianCalendar();
         calendar.setTimeInMillis(unix);
 
         int message_day_of_month = calendar.get(Calendar.DAY_OF_MONTH);
         int current_day_of_month = currentCalendar.get(Calendar.DAY_OF_MONTH);
 
-        String message_time = getTimeFromUnix(unix);
+        String message_time = getTimeStringFormat(unix);
 
         if (message_day_of_month == current_day_of_month)
             return "Сегодня в " + message_time;
@@ -50,8 +58,10 @@ public class Tools
         return message_day_of_month + " " + months[calendar.get(Calendar.MONTH)] + "  в " + message_time;
     }
 
-    public static String getTimeFromUnix(long unix)
-    {
+    public static String getTimeStringFormat(long unix) {
+        if (String.valueOf(unix).length() == 10)
+            unix *= 1000;
+
         Calendar calendar = new GregorianCalendar();
         calendar.setTimeInMillis(unix);
 
@@ -81,7 +91,7 @@ public class Tools
      * @param n число, по которому идёт склонение
      * @return правильно просклонённое слово по числу
      */
-    public static String padezh(String ed, String a, String b, String c, int n) {
+    public static String declension(String ed, String a, String b, String c, int n) {
         if (n < 0) {
             n = -n;
         }
@@ -108,5 +118,31 @@ public class Tools
         for (int i = 0; i < sparseArray.size(); i++)
             arrayList.add(sparseArray.valueAt(i));
         return arrayList;
+    }
+
+    public static long timestamp(long timestamp) {
+        String str = String.valueOf(timestamp);
+        if (str.length() > 10)
+            return timestamp / 1000;
+        else return timestamp;
+    }
+
+    public static long timestamp() {
+        long timestamp = System.currentTimeMillis();
+        String str = String.valueOf(timestamp);
+        if (str.length() > 10)
+            return timestamp / 1000;
+        else return timestamp;
+    }
+
+    public static String nonce(int length) {
+        Random random = new SecureRandom();
+
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
+        }
+
+        return sb.toString();
     }
 }

@@ -2,12 +2,13 @@ package org.hvkz.hvkz.modules.profile;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,29 +19,22 @@ import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.annotations.OnClick;
-import org.hvkz.hvkz.database.GalleryStorage;
-import org.hvkz.hvkz.firebase.db.photos.PhotosStorage;
 import org.hvkz.hvkz.interfaces.BaseWindow;
-import org.hvkz.hvkz.interfaces.ViewHandler;
+import org.hvkz.hvkz.modules.profile.gallery.GalleryExtractor;
 import org.hvkz.hvkz.modules.profile.gallery.GalleryViewAdapter;
 import org.hvkz.hvkz.modules.profile.gallery.ItemDecorationAlbumColumns;
-import org.hvkz.hvkz.uapi.models.entities.User;
-import org.hvkz.hvkz.uapi.models.entities.UserData;
+import org.hvkz.hvkz.modules.profile.gallery.RemoteGalleryExtractor;
+import org.hvkz.hvkz.templates.ViewHandler;
+import org.hvkz.hvkz.uapi.User;
+import org.hvkz.hvkz.uapi.extensions.Parameters;
 import org.hvkz.hvkz.utils.ContextApp;
 
-import javax.inject.Inject;
-
-import static org.hvkz.hvkz.modules.MainActivity.GALLERY_REQUEST;
+import static org.hvkz.hvkz.modules.NavigationActivity.GALLERY_REQUEST;
+import static org.hvkz.hvkz.modules.profile.ProfileFragment.USER_ID;
 
 public class ProfileViewHandler extends ViewHandler<ProfilePresenter>
 {
-    private static final String TAG = "ProfileViewHandler";
-
-    private final int PHOTO_LIMIT = 15;
-    private int PHOTO_OFFSET = PHOTO_LIMIT * (-1);
-
-    @Inject
-    User user;
+    private User user;
 
     @BindView(R.id.profileScrollView)
     private NestedScrollView nestedScrollView;
@@ -84,59 +78,51 @@ public class ProfileViewHandler extends ViewHandler<ProfilePresenter>
     @BindView(R.id.photo)
     private ImageView photo;
 
+    @BindView(R.id.fab)
+    private FloatingActionButton floatingActionButton;
+
     @BindView(R.id.recyclerGalleryView)
     private RecyclerView recyclerView;
 
-    private PhotosStorage photosStorage;
-    private GalleryStorage galleryStorage;
+    private GalleryExtractor galleryExtractor;
     private GalleryViewAdapter galleryViewAdapter;
-    private boolean isLoading;
+    private boolean isViewer;
 
-    public ProfileViewHandler(BaseWindow<ProfilePresenter> baseWindow) {
+    ProfileViewHandler(BaseWindow<ProfilePresenter> baseWindow) {
         super(baseWindow);
-        if (galleryStorage.isEmpty()) refreshGallery();
-        else loadMore();
     }
 
     @Override
     protected void handle(Context context) {
         HVKZApp hvkzApp = ContextApp.getApp(context);
-        hvkzApp.component().inject(this);
+        user = hvkzApp.getCurrentUser();
 
-        photosStorage = hvkzApp.getPhotosStorage();
-        galleryStorage = hvkzApp.getGalleryStorage();
+        Bundle args = window(Fragment.class).getArguments();
+        if (args != null) {
+            isViewer = true;
+            int userId = args.getInt(USER_ID);
+            floatingActionButton.setVisibility(View.GONE);
+            hvkzApp.getUsersStorage().getByIdFromRemote(userId, value -> {
+                user = value;
+                setupProfile(hvkzApp);
+            });
+        } else {
+            setupProfile(hvkzApp);
+        }
+    }
 
+    private void setupProfile(HVKZApp hvkzApp) {
         setupCard();
         setupGallery();
 
         nestedScrollView.fullScroll(View.FOCUS_UP);
+        galleryExtractor =  (isViewer)
+                ? new RemoteGalleryExtractor(user.getUserId(), hvkzApp, galleryViewAdapter)
+                : new GalleryExtractor(hvkzApp, galleryViewAdapter);
     }
 
-    public GalleryViewAdapter getGalleryViewAdapter() {
+    GalleryViewAdapter getGalleryViewAdapter() {
         return galleryViewAdapter;
-    }
-
-    public void loadMore() {
-        Log.d(TAG, "Load more from DB");
-        isLoading = true;
-        int oldCount = galleryViewAdapter.getItemCount();
-        galleryViewAdapter.addPhotos(galleryStorage.getPhotos(PHOTO_LIMIT, PHOTO_OFFSET = PHOTO_OFFSET + PHOTO_LIMIT));
-
-        if (oldCount == 0) galleryViewAdapter.notifyDataSetChanged();
-        else galleryViewAdapter.notifyItemRangeInserted(oldCount, PHOTO_LIMIT);
-        isLoading = false;
-    }
-
-    public void refreshGallery() {
-        Log.d(TAG, "Load from Firebase Storage.");
-        photosStorage.getAll(photos -> {
-            galleryStorage.clear();
-            galleryViewAdapter.clear();
-
-            galleryStorage.addAll(photos);
-            PHOTO_OFFSET = PHOTO_LIMIT * (-1);
-            loadMore();
-        });
     }
 
     private void setupGallery() {
@@ -150,30 +136,32 @@ public class ProfileViewHandler extends ViewHandler<ProfilePresenter>
         nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener)
                 (view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
                     if(view.getChildAt(view.getChildCount() - 1) != null) {
-                        if ((scrollY  >= (view.getChildAt(view.getChildCount() - 1).getMeasuredHeight()
-                                - window(Fragment.class).getView().getMeasuredHeight())) &&
-                                scrollY > oldScrollY)
-                        {
-                            if (!isLoading) loadMore();
-                        }
+                        View window = window(Fragment.class).getView();
+                        if (window == null) return;
+                        int windowHeight = window.getMeasuredHeight();
+                        int childHeight = view.getChildAt(view.getChildCount() - 1).getMeasuredHeight();
+                            if (scrollY  >= (childHeight - windowHeight) && scrollY > oldScrollY) {
+                                if (!galleryExtractor.isLoading()) galleryExtractor.loadMore();
+                            }
                     }
                 });
     }
 
 
     private void setupCard() {
-        UserData userData = user.getUserData();
+        Parameters parameters = user.getParameters();
         String height, weight;
 
         displayName.setText(user.getDisplayName());
         groupName.setText(user.getGroupName());
-        chestValue.setText(userData.getChestCircumference());
-        underchestValue.setText(userData.getUnderChestCircumference());
-        waistValue.setText(userData.getField(UserData.WAIST_CIRCUMFERENCE));
-        pelvisValue.setText(userData.getField(UserData.GIRTH_PELVIS));
-        buttocksValue.setText(userData.getField(UserData.GIRTH_BUTTOCKS));
-        heightValue.setText(height = userData.getField(UserData.GROWTH));
-        weightValue.setText(weight = userData.getField(UserData.WEIGHT));
+        chestValue.setText(parameters.getChest());
+        underchestValue.setText(parameters.getUnderchest());
+        waistValue.setText(parameters.getWaistCirc());
+        pelvisValue.setText(parameters.getGirthPelvis());
+        buttocksValue.setText(parameters.getGirthButtocks());
+        heightValue.setText(height = parameters.getGrowth());
+        weightValue.setText(weight = parameters.getWeight());
+        targetWeightValue.setText(parameters.getDesiredWeight());
 
         try {
             double w = Double.valueOf(weight);
@@ -188,15 +176,13 @@ public class ProfileViewHandler extends ViewHandler<ProfilePresenter>
             e.printStackTrace();
         }
 
-        targetWeightValue.setText(userData.getField(UserData.DESIRED_WEIGHT));
-
         Glide.with(window(Fragment.class))
                 .load(user.getPhotoUrl())
                 .into(photo);
     }
 
     @OnClick(R.id.fab)
-    public void pickPhotoAction() {
+    public void pickPhotoAction(View view) {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
         activity().startActivityForResult(photoPickerIntent, GALLERY_REQUEST);

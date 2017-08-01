@@ -2,8 +2,8 @@ package org.hvkz.hvkz.firebase.entities;
 
 import android.util.SparseArray;
 
-import org.hvkz.hvkz.uapi.models.entities.User;
-import org.hvkz.hvkz.xmpp.XMPPConfiguration;
+import org.hvkz.hvkz.uapi.User;
+import org.hvkz.hvkz.xmpp.config.XMPPConfiguration;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;

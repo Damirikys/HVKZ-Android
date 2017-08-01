@@ -37,7 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.github.pinball83.maskededittext.MaskedEditText
+            <com.scout.widget.MaskedEditText
                 android:id="@+id/phone_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -49,10 +49,9 @@
                 android:paddingBottom="16dp"
                 android:textAlignment="center"
                 android:inputType="number"
-                app:mask="+7-(***)-***-**-**"
-                app:notMaskedSymbol="*"
-                app:maskIconColor="@color/colorWhite"
-                android:maxLines="1"/>
+                android:maxLines="1"
+                app:forward_mask="true"
+                app:mask="+7 \\d\\d\\d \\d\\d\\d-\\d\\d-\\d\\d"/>
 
         </android.support.design.widget.TextInputLayout>
 

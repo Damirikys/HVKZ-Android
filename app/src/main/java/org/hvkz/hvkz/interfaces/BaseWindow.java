@@ -18,4 +18,6 @@ public interface BaseWindow<T>
     Context getContext();
 
     Activity getActivity();
+
+    Object getViewFinder();
 }

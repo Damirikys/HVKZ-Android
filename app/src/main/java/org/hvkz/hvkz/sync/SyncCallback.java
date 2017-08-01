@@ -2,7 +2,7 @@ package org.hvkz.hvkz.sync;
 
 import android.support.annotation.NonNull;
 
-import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.uapi.User;
 
 public interface SyncCallback
 {

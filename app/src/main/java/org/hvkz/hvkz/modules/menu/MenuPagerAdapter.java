@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,16 +21,10 @@ import org.hvkz.hvkz.R;
 
 import java.util.List;
 
-public class MenuPagerAdapter extends PagerAdapter
+class MenuPagerAdapter extends PagerAdapter
 {
-    private static final SparseArray<String> TITLE_MAP = new SparseArray<String>() {{
-        put(0, "На завтрак");
-        put(1, "На перекус");
-        put(2, "На обед");
-        put(3, "На полдник");
-        put(4, "На ужин");
-    }};
-
+    private final String[] titleMap;
+    private final String[] timeMap;
 
     private Context context;
     private ViewPager viewPager;
@@ -39,14 +32,17 @@ public class MenuPagerAdapter extends PagerAdapter
 
     private List<String> data;
 
-    public MenuPagerAdapter(ViewPager viewPager, List<String> data) {
+    MenuPagerAdapter(ViewPager viewPager, List<String> data) {
         this.viewPager = viewPager;
         this.context = viewPager.getContext();
         this.navigatorAdapter = new MenuNavigatorAdapter();
         this.data = data;
+
+        this.titleMap = context.getResources().getStringArray(R.array.menu_titles);
+        this.timeMap = context.getResources().getStringArray(R.array.menu_times);
     }
 
-    public CommonNavigator getCommonNavigator() {
+    CommonNavigator getCommonNavigator() {
         CommonNavigator navigator = new CommonNavigator(context);
         navigator.setAdapter(navigatorAdapter);
         return navigator;
@@ -56,6 +52,8 @@ public class MenuPagerAdapter extends PagerAdapter
     public Object instantiateItem(ViewGroup collection, int position) {
         View view = LayoutInflater.from(context).inflate(R.layout.menu_pager_item, collection, false);
         TextView textView = (TextView) view.findViewById(R.id.text);
+        TextView timeView = (TextView) view.findViewById(R.id.time);
+        timeView.setText(timeMap[position]);
         textView.setSelected(true);
         textView.setText(data.get(position));
         textView.setOnClickListener(v -> new AlertDialog.Builder(context)
@@ -63,6 +61,7 @@ public class MenuPagerAdapter extends PagerAdapter
                 .setMessage(data.get(position))
                 .create()
                 .show());
+
         collection.addView(view);
         return view;
     }
@@ -84,7 +83,7 @@ public class MenuPagerAdapter extends PagerAdapter
 
     @Override
     public CharSequence getPageTitle(int position) {
-        return TITLE_MAP.get(position);
+        return titleMap[position];
     }
 
     private class MenuNavigatorAdapter extends CommonNavigatorAdapter

@@ -7,9 +7,9 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseUser;
 
 import org.hvkz.hvkz.HVKZApp;
-import org.hvkz.hvkz.uapi.models.UAPIClient;
-import org.hvkz.hvkz.uapi.models.entities.User;
-import org.hvkz.hvkz.uapi.models.responses.UAPIUserResponse;
+import org.hvkz.hvkz.uapi.UAPIClient;
+import org.hvkz.hvkz.uapi.User;
+import org.hvkz.hvkz.uapi.responses.UAPIUserResponse;
 import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
 
@@ -93,9 +93,12 @@ public final class SyncInteractor
             Log.d(TAG, uapiPhone + " " + firebasePhone);
 
             if (firebasePhone != null && firebasePhone.equals(uapiPhone)) {
-                app.setCurrentUser(profile);
-
-                if (callback != null) callback.onSuccessSync(profile);
+                client.getUserById(profile.getUserId(), user -> {
+                    if (user == null) app.setCurrentUser(profile);
+                    else app.setCurrentUser(user);
+                    if (callback != null) //noinspection ConstantConditions
+                        callback.onSuccessSync(user);
+                });
             } else {
                 if (callback != null) callback.numberMismatch();
             }

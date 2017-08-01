@@ -3,7 +3,7 @@ package org.hvkz.hvkz.adapters;
 import android.support.annotation.NonNull;
 
 import org.hvkz.hvkz.sync.SyncCallback;
-import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.uapi.User;
 
 public abstract class SyncAdapter implements SyncCallback
 {

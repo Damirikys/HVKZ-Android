@@ -1,6 +1,5 @@
 package org.hvkz.hvkz.modules.menu;
 
-import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,18 +7,15 @@ import android.view.ViewGroup;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.firebase.db.MenuStorage;
-import org.hvkz.hvkz.utils.ContextApp;
 
 import java.util.List;
 
-public class MenuRecyclerAdapter extends RecyclerView.Adapter<MenuItemViewHolder>
+class MenuRecyclerAdapter extends RecyclerView.Adapter<MenuItemViewHolder>
 {
     private List<MenuStorage.MenuItem> menuItems;
 
-    public MenuRecyclerAdapter(Context context) {
-        this.menuItems = ContextApp.getApp(context)
-                .getMenuStorage()
-                .getWeeklyMenu();
+    MenuRecyclerAdapter(List<MenuStorage.MenuItem> items) {
+        this.menuItems = items;
     }
 
     @Override

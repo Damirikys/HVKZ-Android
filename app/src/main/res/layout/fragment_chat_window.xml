@@ -9,7 +9,7 @@
 
     <include layout="@layout/chat_toolbar" />
 
-    <org.hvkz.hvkz.modules.chats.window.MessagesListView
+    <org.hvkz.hvkz.modules.chats.window.messages.MessagesListView
         android:layout_marginTop="50dp"
         android:id="@+id/msgListView"
         android:scrollbars="vertical"

@@ -14,10 +14,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.database.GalleryStorage;
-import org.hvkz.hvkz.firebase.db.photos.PhotosStorage;
+import org.hvkz.hvkz.firebase.db.PhotosStorage;
 import org.hvkz.hvkz.firebase.entities.Photo;
 import org.hvkz.hvkz.firebase.storage.PhotoUploader;
-import org.hvkz.hvkz.modules.gallery.ImagesProvider;
+import org.hvkz.hvkz.uimodels.gallery.ImagesProvider;
 import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.ExecuteCallbackAdapter;
 
@@ -38,18 +38,13 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
         this.items = new ArrayList<>();
     }
 
-    public void addPhotos(List<Photo> photos) {
+    void addPhotos(List<Photo> photos) {
         this.items.addAll(photos);
     }
 
     public GalleryViewAdapter addPhoto(Photo photo) {
         items.add(0, photo);
         return this;
-    }
-
-    public void removePhoto(int position)
-    {
-        items.remove(position);
     }
 
     public void clear()
@@ -82,9 +77,9 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
 
     class GalleryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener
     {
-        public ImageView photo_item;
+        ImageView photo_item;
 
-        public GalleryViewHolder(View itemView) {
+        GalleryViewHolder(View itemView) {
             super(itemView);
 
             photo_item = (ImageView) itemView.findViewById(R.id.photo_item);
@@ -103,8 +98,8 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
             Photo photo = items.get(getAdapterPosition());
 
             AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-            builder.setTitle("Выберите действие")
-                    .setItems(new String[]{"Удалить"}, (dialog, which) -> PhotoUploader.with(context)
+            builder.setTitle(R.string.select_action)
+                    .setItems(new String[]{context.getString(R.string.delete)}, (dialog, which) -> PhotoUploader.with(context)
                             .callback(new ExecuteCallbackAdapter<Photo>() {
                                 @Override
                                 public void onRemoved() {
@@ -115,7 +110,7 @@ public class GalleryViewAdapter extends RecyclerView.Adapter<GalleryViewAdapter.
                                             notifyItemRemoved(getAdapterPosition());
                                         } else {
                                             new AlertDialog.Builder(context)
-                                                    .setMessage("Не удалось удалить фотографию.")
+                                                    .setMessage(R.string.cant_remove_photo)
                                                     .create()
                                                     .show();
                                         }

@@ -12,7 +12,10 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:background="@drawable/ripple_contacts"
-        android:padding="@dimen/sixteen">
+        android:paddingTop="@dimen/sixteen"
+        android:paddingLeft="@dimen/sixteen"
+        android:paddingRight="@dimen/sixteen"
+        android:paddingBottom="0dp">
 
         <RelativeLayout
             android:layout_width="wrap_content"
@@ -37,74 +40,82 @@
 
         </RelativeLayout>
 
-        <LinearLayout
-            android:paddingLeft="@dimen/sixteen"
-            android:paddingRight="@dimen/sixteen"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:orientation="horizontal"
+                android:id="@+id/layout_contact"
+                android:paddingLeft="@dimen/sixteen"
+                android:paddingRight="@dimen/sixteen"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/dialogName"
-                    android:textStyle="bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#424242"
-                    android:textSize="16sp"
-                    android:text="Contact name"/>
-
-                <TextView
-                    android:id="@+id/timestamp"
-                    android:gravity="right"
+                <LinearLayout
+                    android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#b7b7b7"
-                    android:textSize="12sp" />
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/dialogName"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#424242"
+                        android:textSize="16sp"
+                        android:text="Contact name"/>
+
+                    <TextView
+                        android:id="@+id/timestamp"
+                        android:gravity="right"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#b7b7b7"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/lastMessage"
+                        android:layout_marginTop="5dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="2"
+                        android:textSize="14sp"
+                        android:textColor="#757575"
+                        android:text="печатает..." />
+
+                    <com.bhargavms.dotloader.DotLoader
+                        android:id="@+id/typing_indicator"
+                        android:visibility="invisible"
+                        android:layout_width="wrap_content"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginLeft="@dimen/sixteen"
+                        app:color_array="@array/dot_colors"
+                        app:dot_radius="3dp"
+                        app:number_of_dots="3"/>
+
+                </RelativeLayout>
 
             </LinearLayout>
 
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/sixteen"
+                android:layout_alignParentRight="true"
+                android:layout_below="@id/layout_contact"
+                android:background="@color/colorLight"/>
 
-                <TextView
-                    android:id="@+id/lastMessage"
-                    android:layout_marginTop="5dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:maxLines="2"
-                    android:textSize="14sp"
-                    android:textColor="#757575"
-                    android:text="печатает..." />
-
-                <com.bhargavms.dotloader.DotLoader
-                    android:id="@+id/typing_indicator"
-                    android:visibility="invisible"
-                    android:layout_width="wrap_content"
-                    android:layout_height="10dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_alignParentRight="true"
-                    android:layout_marginLeft="@dimen/sixteen"
-                    app:color_array="@array/dot_colors"
-                    app:dot_radius="3dp"
-                    app:number_of_dots="3"/>
-
-            </RelativeLayout>
-
-        </LinearLayout>
+        </RelativeLayout>
 
     </LinearLayout>
-
-    <View
-        android:layout_width="310dp"
-        android:layout_height="1dp"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/dialogItem"
-        android:background="@color/colorLight"/>
 
 </RelativeLayout>

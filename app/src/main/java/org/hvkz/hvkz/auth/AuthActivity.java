@@ -2,7 +2,7 @@ package org.hvkz.hvkz.auth;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.Layout;
-import org.hvkz.hvkz.models.AppActivity;
+import org.hvkz.hvkz.uimodels.AppActivity;
 
 @Layout(R.layout.activity_login)
 public class AuthActivity extends AppActivity<AuthPresenter>

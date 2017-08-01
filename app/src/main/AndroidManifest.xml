@@ -37,28 +37,28 @@
             android:label="@string/title_activity_sync">
         </activity>
         <activity
-            android:name=".modules.MainActivity"
+            android:name=".modules.NavigationActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity
-            android:name=".modules.gallery.ImagesGalleryActivity"
+            android:name=".uimodels.gallery.ImagesGalleryActivity"
             android:theme="@style/Theme.Transparent">
         </activity>
 
-        <service android:name=".services.MyFirebaseMessagingService">
+        <service android:name=".firebase.services.MyFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".services.MyFirebaseInstanceIDService">
+        <service android:name=".firebase.services.MyFirebaseInstanceIDService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
         <service
-            android:name=".services.MyJobService"
+            android:name=".firebase.services.MyJobService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
@@ -69,14 +69,14 @@
             android:exported="false">
         </service>
 
-        <receiver android:name=".xmpp.BootBroadcast">
+        <receiver android:name=".xmpp.utils.XMPPBootBroadcast">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
 
-        <activity android:name=".StubActivity"
+        <activity android:name=".xmpp.utils.ReanimateActivity"
                   android:theme="@style/Theme.Transparent">
         </activity>
     </application>

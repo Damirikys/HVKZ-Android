@@ -24,6 +24,7 @@ import static org.hvkz.hvkz.uapi.oauth.OAuth.OAUTH_TOKEN;
 import static org.hvkz.hvkz.uapi.oauth.OAuth.OAUTH_TOKEN_SECRET;
 import static org.hvkz.hvkz.uapi.oauth.OAuth.OAUTH_VERSION;
 
+@SuppressWarnings("unused")
 public class OAuthSignature
 {
     private static final String TAG = "OAuthSignature";

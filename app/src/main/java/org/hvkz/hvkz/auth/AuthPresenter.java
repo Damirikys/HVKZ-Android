@@ -1,9 +1,6 @@
 package org.hvkz.hvkz.auth;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.telephony.SmsMessage;
@@ -15,19 +12,17 @@ import com.google.firebase.auth.PhoneAuthProvider;
 
 import org.hvkz.hvkz.interfaces.BaseWindow;
 import org.hvkz.hvkz.interfaces.Destroyable;
-import org.hvkz.hvkz.interfaces.ViewHandler;
-import org.hvkz.hvkz.models.BasePresenter;
-import org.hvkz.hvkz.modules.MainActivity;
+import org.hvkz.hvkz.modules.NavigationActivity;
 import org.hvkz.hvkz.sync.SyncCallback;
 import org.hvkz.hvkz.sync.SyncInteractor;
-import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.templates.BasePresenter;
+import org.hvkz.hvkz.templates.ViewHandler;
+import org.hvkz.hvkz.uapi.User;
 import org.hvkz.hvkz.utils.validators.EmailValidator;
 
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.hvkz.hvkz.auth.AuthActivity.ACTION_SMS_RECEIVE;
 
 public class AuthPresenter extends BasePresenter<AuthPresenter> implements Destroyable, SyncCallback
 {
@@ -44,33 +39,11 @@ public class AuthPresenter extends BasePresenter<AuthPresenter> implements Destr
         super(view);
         this.firebaseAuth = FirebaseAuth.getInstance();
         this.phoneAuthProvider = PhoneAuthProvider.getInstance();
-        this.verificationState = new OnVerificationState();
-    }
-
-    @Override
-    public void init() {
-        if (firebaseAuth.getCurrentUser() != null) {
-            SyncInteractor.with(context(), firebaseAuth.getCurrentUser().getEmail()).start();
-            activity().startActivity(new Intent(context(), MainActivity.class));
-            activity().finish();
-        } else {
-            activity().registerReceiver(new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    Log.d(TAG, "SMS WAS RECEIVED");
-                    handleSMS(intent.getExtras());
-                }
-            }, new IntentFilter(ACTION_SMS_RECEIVE));
-        }
     }
 
     public void verifyPhoneNumber(String number) {
-        phoneAuthProvider.verifyPhoneNumber(number,
-                TIME_WAIT_LIMIT,
-                TimeUnit.SECONDS,
-                activity(),
-                verificationState
-        );
+        phoneAuthProvider.verifyPhoneNumber(number, TIME_WAIT_LIMIT, TimeUnit.SECONDS, activity(),
+                verificationState = new OnVerificationState());
     }
 
     public void handleSMS(Bundle extras) {
@@ -114,9 +87,9 @@ public class AuthPresenter extends BasePresenter<AuthPresenter> implements Destr
 
     public void signIn(String email, String password) {
         if (EmailValidator.emailAddressIsCorrect(email) && !password.isEmpty()) {
-            getViewHandler().window().showProgress("Подождите...");
+            getViewHandler().baseWindow().showProgress("Подождите...");
             firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
-                getViewHandler().window().hideProgress();
+                getViewHandler().baseWindow().hideProgress();
                 if (task.isSuccessful()) {
                     Log.d(TAG, "signInWithEmail:success");
                     getViewHandler(AuthViewHandler.class).onAuthenticateSuccess();
@@ -141,7 +114,7 @@ public class AuthPresenter extends BasePresenter<AuthPresenter> implements Destr
     public void onSuccessSync(@NonNull User info) {
         Log.d(TAG, "OnSuccessSync");
         isAuthenticate = true;
-        activity().startActivity(new Intent(activity(), MainActivity.class));
+        activity().startActivity(new Intent(activity(), NavigationActivity.class));
         activity().finish();
     }
 

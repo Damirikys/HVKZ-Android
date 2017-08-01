@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <org.hvkz.hvkz.modules.gallery.GalleryPager
+    <org.hvkz.hvkz.uimodels.gallery.GalleryPager
         android:id="@+id/vpPager"
         android:layout_gravity="center_vertical"
         android:layout_width="match_parent"

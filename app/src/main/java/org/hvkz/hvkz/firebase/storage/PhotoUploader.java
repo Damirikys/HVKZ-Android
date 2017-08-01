@@ -11,10 +11,11 @@ import android.widget.Toast;
 
 import org.hvkz.hvkz.R;
 import org.hvkz.hvkz.annotations.BindView;
-import org.hvkz.hvkz.firebase.db.photos.PhotosStorage;
+import org.hvkz.hvkz.firebase.db.PhotosStorage;
 import org.hvkz.hvkz.firebase.entities.Photo;
-import org.hvkz.hvkz.models.ViewBinder;
+import org.hvkz.hvkz.uimodels.ViewBinder;
 import org.hvkz.hvkz.utils.ContextApp;
+import org.hvkz.hvkz.utils.Tools;
 import org.hvkz.hvkz.utils.network.FBStorageExecutor;
 
 import io.netopen.hotbitmapgg.library.view.RingProgressBar;
@@ -101,7 +102,7 @@ public class PhotoUploader implements FBStorageExecutor.ExecuteCallback<Uri>
 
     private void onCompleteTask(String description) {
         Photo photo = new Photo(uploadedUri.toString())
-                .setDate(System.currentTimeMillis())
+                .setDate(Tools.timestamp())
                 .setDescription(description);
 
         photosStorage.upload(photo, value -> {

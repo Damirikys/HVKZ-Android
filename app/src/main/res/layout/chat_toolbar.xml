@@ -48,7 +48,6 @@
                 android:id="@+id/title_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Шайхисламов Дамир Арманович Лолкек чебурек я человек"
                 android:ellipsize="marquee"
                 android:marqueeRepeatLimit="marquee_forever"
                 android:focusable="true"
@@ -68,7 +67,6 @@
                     android:id="@+id/subtitle_toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="онлайн"
                     android:textColor="#eaeaea"/>
 
                 <com.bhargavms.dotloader.DotLoader

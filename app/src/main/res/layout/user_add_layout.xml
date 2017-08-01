@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:id="@+id/userItem"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:background="@color/colorLight"
+        android:foreground="@drawable/ripple_contacts"
+        android:padding="@dimen/sixteen">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/userPhoto"
+                android:src="@drawable/noavatar"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:border_width="1dp"
+                app:border_color="#00000000"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/layout_contact"
+                android:paddingLeft="@dimen/sixteen"
+                android:paddingRight="@dimen/sixteen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/userName"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#424242"
+                        android:textSize="16sp"
+                        android:text="Contact name"/>
+
+                    <TextView
+                        android:id="@+id/timestamp"
+                        android:gravity="right"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#b7b7b7"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/userEmail"
+                        android:layout_marginTop="5dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="2"
+                        android:textSize="14sp"
+                        android:textColor="#757575"
+                        android:text="печатает..." />
+
+                    <TextView
+                        android:id="@+id/userPhone"
+                        android:layout_marginTop="5dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/userEmail"
+                        android:maxLines="2"
+                        android:textSize="14sp"
+                        android:textColor="#b7b7b7"
+                        android:text="+7 922 000 00 00" />
+
+                </RelativeLayout>
+
+            </LinearLayout>
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/circle"
+                android:visibility="invisible"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentRight="true"
+                android:layout_margin="8dp"
+                android:src="@color/colorAccent"
+                app:border_color="#ffffff00"/>
+
+            <ImageView
+                android:id="@+id/mark"
+                android:visibility="invisible"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_alignParentRight="true"
+                android:layout_margin="@dimen/sixteen"
+                android:background="@drawable/apply"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/userItem"
+        android:background="#e2e2e2"/>
+
+</RelativeLayout>

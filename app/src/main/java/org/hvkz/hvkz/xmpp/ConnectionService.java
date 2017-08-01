@@ -13,25 +13,26 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import org.hvkz.hvkz.StubActivity;
 import org.hvkz.hvkz.adapters.SyncAdapter;
 import org.hvkz.hvkz.sync.SyncInteractor;
-import org.hvkz.hvkz.uapi.models.entities.User;
+import org.hvkz.hvkz.templates.LocalBinder;
+import org.hvkz.hvkz.uapi.User;
 import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
-import org.hvkz.hvkz.xmpp.message_service.MessageReceiver;
-import org.hvkz.hvkz.xmpp.notification_service.ConnectionServiceController;
+import org.hvkz.hvkz.xmpp.config.XMPPConfiguration;
+import org.hvkz.hvkz.xmpp.config.XMPPCredentials;
+import org.hvkz.hvkz.xmpp.messaging.MessageReceiver;
+import org.hvkz.hvkz.xmpp.utils.ReanimateActivity;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.util.List;
 
-import static org.hvkz.hvkz.xmpp.BootBroadcast.BROADCAST_KEY;
+import static org.hvkz.hvkz.xmpp.utils.XMPPBootBroadcast.BROADCAST_KEY;
 
 public class ConnectionService extends Service
 {
@@ -39,7 +40,7 @@ public class ConnectionService extends Service
 
     private XMPPCredentials credentials;
     private AbstractXMPPConnection connection;
-    private ConnectionServiceController serviceController;
+    private ConnectionContractor serviceController;
     private MessageReceiver messageReceiver;
     private LogThread logThread;
 
@@ -57,13 +58,9 @@ public class ConnectionService extends Service
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "Service was created!");
-        User user = ContextApp.getApp(this).getCurrentUser();
-        if (user != null) {
-            credentials = XMPPCredentials.getCredentials(user.getUserId());
-        }
-
         connection = XMPPConfiguration.connectionInstance(serviceController =
-                new ConnectionServiceController(this));
+                new ConnectionContractor(this));
+        connection.addPacketSendingListener(packet -> System.out.println("Sending: " + packet.toXML()), stanza -> true);
 
         startLogThread();
     }
@@ -142,14 +139,16 @@ public class ConnectionService extends Service
     }
 
     public void recreateConnection() {
+        connection.disconnect();
         connection = XMPPConfiguration.connectionInstance(serviceController);
+        connection.disconnect();
     }
 
     public void reanimate() {
-        Log.d(TAG, "Start StubActivity and reanimate service!");
+        Log.d(TAG, "Start ReanimateActivity and reanimate service!");
 
         recreateConnection();
-        Intent intent = new Intent(this, StubActivity.class);
+        Intent intent = new Intent(this, ReanimateActivity.class);
 
         if (isAppOnForeground()) {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -184,12 +183,10 @@ public class ConnectionService extends Service
         if (messageReceiver == null) {
             try {
                 messageReceiver = MessageReceiver.instanceOf(
-                        this, JidCreate.entityFullFrom(credentials.getXmppLogin() + "@" + XMPPConfiguration.DOMAIN + "/Android")
+                        this, JidCreate.entityFullFrom(getCredentials().getXmppLogin() + "@" + XMPPConfiguration.DOMAIN + "/Android")
                 );
-            } catch (XmppStringprepException e) {
-                messageReceiver = MessageReceiver.instanceOf(
-                        this, connection.getUser()
-                );
+            } catch (Exception e) {
+                messageReceiver = MessageReceiver.instanceOf(this, connection.getUser());
             }
         }
 
@@ -197,6 +194,13 @@ public class ConnectionService extends Service
     }
 
     public XMPPCredentials getCredentials() {
+        if (credentials == null) {
+            User user = ContextApp.getApp(this).getCurrentUser();
+            if (user != null) {
+                credentials = XMPPCredentials.getCredentials(user.getUserId());
+            }
+        }
+
         return credentials;
     }
 
@@ -240,19 +244,6 @@ public class ConnectionService extends Service
                         reanimate();
                     }
                 }
-//
-//                if (!NetworkStatus.hasConnection(ConnectionService.this)) {
-//                    if (connection.isAuthenticated()) {
-//                        Log.d(TAG, "Start reanimate because we lost connection but stay online.");
-//                        reanimate();
-//                    } else {
-//                        tryConnect();
-//                    }
-//                } else {
-//                    if (!connection.isAuthenticated()) {
-//                        tryConnect();
-//                    }
-//                }
 
                 SystemClock.sleep(60000);
             }

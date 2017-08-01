@@ -25,12 +25,4 @@ public class MenuPagerTitleView extends SimplePagerTitleView
         setScaleX(1.0f + (mMinScale - 1.0f) * leavePercent);
         setScaleY(1.0f + (mMinScale - 1.0f) * leavePercent);
     }
-
-    public float getMinScale() {
-        return mMinScale;
-    }
-
-    public void setMinScale(float minScale) {
-        mMinScale = minScale;
-    }
 }

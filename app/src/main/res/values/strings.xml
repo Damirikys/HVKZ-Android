@@ -1,7 +1,6 @@
 <resources>
-    <string name="app_name">HVKZ</string>
+    <string name="app_name">ХудеемВместе!</string>
 
-    <!-- Strings related to verifyPhoneNumber -->
     <string name="prompt_phone_number">Введите свой номер телефона</string>
     <string name="prompt_password">Пароль</string>
     <string name="permission_denied_description">Пожалуйста, предоставьте приложению разрешения, чтобы Вы смогли им пользоваться.</string>
@@ -13,13 +12,70 @@
     <string name="login_title">Худеем Вместе!</string>
     <string name="welcome">Добро пожаловать</string>
     <string name="sms_description">На Ваш номер будет отправлено СМС сообщение с кодом подтверждения. Приложение увидит сообщение и авторизует Вас.</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">Худеем вместе!</string>
     <string name="title_home">Профиль</string>
     <string name="title_message">Сообщения</string>
     <string name="title_menu">Меню</string>
     <string name="title_activity_sync">Синхронизация</string>
+    <string name="hellow_alert">Здравствуйте!</string>
+    <string name="if_not_member_notification">Вы не являетесь участником программы, либо оплаченный период закончился. Наш оператор готов ответить на все Ваши вопросы.</string>
+    <string name="only_for_members">Только для участников программы</string>
+    <string name="select_action">Выберите действие</string>
+    <string name="delete">Удалить</string>
+    <string name="cant_remove_photo">Не удалось удалить фотографию</string>
+    <string name="please_wait">Подождите</string>
+    <string name="complete">Готово</string>
+    <string name="failed">Не удалось</string>
+    <string name="editing">Редактирование</string>
+    <string name="creating_a_group">Создание группы</string>
+    <string name="selected">Выбрано</string>
+    <string name="enter_description_group">Введите описание группы</string>
+    <string name="no_connected">Нет соединения с сервером</string>
+    <string name="unknown_warning">Произошла ошибка</string>
+    <string name="please_wait_photo_uploading">Произошла ошибка</string>
+    <string name="reply_to">В ответ на</string>
+    <string name="online">В сети</string>
+    <string name="offline">Не в сети</string>
+    <string name="photo_upload_failed">Не удалось загрузить фотографию</string>
+    <string name="copy">Копировать</string>
+    <string name="copy_done">Скопировано</string>
+    <string name="exclude_from_group">Исключить из группы</string>
+    <string name="member_excluded">Участник исключен</string>
+    <string name="members_roster">Список участников</string>
+    <string name="edit_group">Редактировать группу</string>
+    <string name="in_chat">В диалоге</string>
+    <string name="today">СЕГОДНЯ</string>
+    <string name="enter_password">Введите пароль</string>
+    <string name="password_notice">Вы можете указать такой же пароль как для сайта, так и для приложения.</string>
+    <string name="save">Сохранить</string>
+    <string name="check_connect_and_retry">Пожалуйста, проверьте подключение к интернету и повторите попытку.</string>
+    <string name="sync_failed_check_phone">Не удалось синхронизироваться. Проверьте, что в аккаунте на сайте указан Ваш номер телефона.</string>
+    <string name="not_found">Не найдено</string>
+    <string name="account_email_not_exist">Аккаунт с таким E-mail адресом не найден</string>
+    <string name="phone_does_not_match">Ваш номер не совпадает с номером, указанным в аккаунте.</string>
+    <string name="wrong_data">Неверные данные</string>
 
-    <!-- Strings related to Settings -->
+    <string-array name="menu_titles">
+        <item>На завтрак</item>
+        <item>На перекус</item>
+        <item>На обед</item>
+        <item>На полдник</item>
+        <item>На ужин</item>
+    </string-array>
+
+    <string-array name="menu_times">
+        <item>09:00–10:00</item>
+        <item>11:30–12:00</item>
+        <item>13:00–14:00</item>
+        <item>16:00–16:30</item>
+        <item>19:00–20:00</item>
+    </string-array>
+
+    <string name="authorization">Authorization</string>
+    <string name="authtoken">xp2rmBRtww9B2N5h</string>
+    <string name="rest_chatrooms">:9090/plugins/restapi/v1/chatrooms</string>
+
+    <string name="mediatype_json">application/json; charset=utf-8</string>
 
     <!-- Example General settings -->
     <string name="pref_header_general">General</string>
@@ -92,5 +148,5 @@
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="email_description">Укажите E-mail адрес, с помощью которого вы зарегистрировались на нашем сайте hvkz.org. Доступ к приложению откроется после синхронизации с Вашей анкетой на сайте.</string>
     <string name="continue_text">Продолжить</string>
-    <string name="type_the_message">Введите сообщение ...</string>
+    <string name="type_the_message">Введите сообщение …</string>
 </resources>

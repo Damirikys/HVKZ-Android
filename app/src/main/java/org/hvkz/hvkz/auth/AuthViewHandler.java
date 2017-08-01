@@ -1,10 +1,13 @@
 package org.hvkz.hvkz.auth;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.CountDownTimer;
 import android.support.design.widget.TextInputLayout;
+import android.text.Editable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -12,22 +15,31 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-import com.github.pinball83.maskededittext.MaskedEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.scout.widget.MaskedEditText;
 
+import org.hvkz.hvkz.HVKZApp;
 import org.hvkz.hvkz.R;
+import org.hvkz.hvkz.adapters.TextWatcherAdapter;
 import org.hvkz.hvkz.annotations.BindView;
 import org.hvkz.hvkz.annotations.OnClick;
 import org.hvkz.hvkz.interfaces.BaseWindow;
-import org.hvkz.hvkz.interfaces.ViewHandler;
+import org.hvkz.hvkz.modules.NavigationActivity;
 import org.hvkz.hvkz.sync.SyncActivity;
+import org.hvkz.hvkz.templates.ViewHandler;
+import org.hvkz.hvkz.uapi.UAPIClient;
+import org.hvkz.hvkz.utils.ContextApp;
 import org.hvkz.hvkz.utils.network.NetworkStatus;
 import org.hvkz.hvkz.utils.validators.NumberValidator;
+
+import static org.hvkz.hvkz.auth.AuthActivity.ACTION_SMS_RECEIVE;
 
 public class AuthViewHandler extends ViewHandler<AuthPresenter> implements AuthCallback
 {
     public static final String TAG = "AuthViewHandler";
+
+    private UAPIClient uapiClient;
 
     @BindView(R.id.email_login_form)
     private View emailLoginForm;
@@ -67,31 +79,55 @@ public class AuthViewHandler extends ViewHandler<AuthPresenter> implements AuthC
 
     @Override
     protected void handle(Context context) {
-        phoneEditText.setOnKeyListener((v, keyCode, event) -> {
-            if (!codeSent) {
-                signInButton.setEnabled(NumberValidator.numberIsCorrect(phoneEditText.getUnmaskedText()));
-            }
+        HVKZApp app = ContextApp.getApp(context);
+        app.component().inject(this);
+        uapiClient = app.getUAPIclient();
 
-            return false;
-        });
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        if (firebaseAuth.getCurrentUser() != null) {
+            splashScreen.setVisibility(View.VISIBLE);
+            uapiClient.getUserById(app.getCurrentUser().getUserId(), user -> {
+                if (user != null) app.setCurrentUser(user);
+                activity().startActivity(new Intent(context(), NavigationActivity.class));
+                activity().finish();
+            });
+        } else {
+            activity().registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    Log.d(TAG, "SMS WAS RECEIVED");
+                    presenter().handleSMS(intent.getExtras());
+                }
+            }, new IntentFilter(ACTION_SMS_RECEIVE));
 
-        codeEditText.setOnKeyListener((v, keyCode, event) -> {
-            if (codeEditText.getText().toString().length() == 6) {
-                presenter().verifySMSKey(codeEditText.getText().toString());
-            }
+            phoneEditText.addTextChangedListener(new TextWatcherAdapter() {
+                @Override
+                public void afterTextChanged(Editable s) {
+                    super.afterTextChanged(s);
+                    if (!codeSent) {
+                        signInButton.setEnabled(NumberValidator.numberIsCorrect(phoneEditText.getUnmaskedText().toString()));
+                    }
+                }
+            });
 
-            return false;
-        });
+            codeEditText.setOnKeyListener((v, keyCode, event) -> {
+                if (codeEditText.getText().toString().length() == 6) {
+                    presenter().verifySMSKey(codeEditText.getText().toString());
+                }
 
-        phoneEditText.setHintTextColor(Color.WHITE);
-        codeEditText.setHintTextColor(Color.WHITE);
+                return false;
+            });
+
+            phoneEditText.setHintTextColor(Color.WHITE);
+            codeEditText.setHintTextColor(Color.WHITE);
+        }
     }
 
 
     @OnClick(R.id.sign_in_button)
     public void onSignButtonClick(View view) {
         if (NetworkStatus.hasConnection(context())) {
-            presenter().verifyPhoneNumber(phoneEditText.getUnmaskedText());
+            presenter().verifyPhoneNumber(phoneEditText.getUnmaskedText().toString());
 
             Toast.makeText(context(),
                     "Код отправлен. Пожалуйста, не сворачивайте экран, пока не придет СМС.", Toast.LENGTH_LONG).show();
@@ -102,8 +138,8 @@ public class AuthViewHandler extends ViewHandler<AuthPresenter> implements AuthC
             signInButton.setEnabled(false);
 
             codeSent = true;
-            new CountDownTimer(60000, 1000)
-            {
+
+            new CountDownTimer(60000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     String value = context().getString(R.string.repeat_through) + " " + String.valueOf(millisUntilFinished / 1000);

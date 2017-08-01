@@ -30,7 +30,7 @@
             android:text="Шайхисламов Дамир Арманович"/>
 
         <TextView
-            android:id="@+id/email"
+            android:id="@+id/group_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="center"

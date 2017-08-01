@@ -6,10 +6,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
 import org.hvkz.hvkz.HVKZApp;
+import org.hvkz.hvkz.utils.controllers.NotificationController;
 import org.hvkz.hvkz.utils.serialize.JSONFactory;
-import org.hvkz.hvkz.xmpp.message_service.AbstractMessageObserver;
-import org.hvkz.hvkz.xmpp.models.ChatMessage;
-import org.hvkz.hvkz.xmpp.notification_service.NotificationService;
+import org.hvkz.hvkz.xmpp.messaging.AbstractMessageObserver;
+import org.hvkz.hvkz.xmpp.messaging.ChatMessage;
 import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.Jid;
@@ -24,14 +24,14 @@ public class MessagesStorage extends AbstractMessageObserver
     private static final String TAG = "MessagesStorage";
 
     private HVKZApp app;
-    private NotificationService notificationService;
+    private NotificationController notificationController;
     private MessagesDbHelper helper;
     private SQLiteDatabase database;
 
     public MessagesStorage(HVKZApp app) {
         super(null);
         this.app = app;
-        this.notificationService = app.getNotificationService();
+        this.notificationController = app.getNotificationService();
         this.helper = new MessagesDbHelper(app);
         this.database = helper.getWritableDatabase();
 
@@ -43,7 +43,7 @@ public class MessagesStorage extends AbstractMessageObserver
     public void messageReceived(ChatMessage message) {
         if (!messageExist(message)) {
             writeMessage(message);
-            notificationService.messageReceived(message);
+            notificationController.messageReceived(message);
         }
     }
 

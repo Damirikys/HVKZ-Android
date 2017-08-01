@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="77dp"
+              android:paddingLeft="@dimen/sixteen"
+              android:paddingRight="@dimen/sixteen"
+              android:paddingTop="@dimen/six">
+
+    <TextView
+        android:id="@+id/product"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="#3e3e3e"
+        android:textSize="18sp"
+        android:text="Банан"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/calories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorTitle"
+            android:textSize="18sp"
+            android:text="228" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorTitle"
+            android:textSize="14sp"
+            android:text=" кк" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/six"
+                android:layout_gravity="right"
+                android:textColor="#d1d1d1"
+                android:textSize="10sp"
+                android:text="на 100 грамм"/>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
